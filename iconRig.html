@@ -1,1402 +1,970 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>ICONRIG — arrange skill icons for your GitHub README</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
-      rel="stylesheet"
-    />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <style>
-      :root {
-        --bg: #0b0e14;
-        --panel: #121821;
-        --panel-2: #0e131a;
-        --border: #232c38;
-        --text: #dbe3ec;
-        --muted: #7c8798;
-        --accent: #c6ff5e;
-        --danger: #ff6b6b;
-      }
-      * {
-        box-sizing: border-box;
-        -webkit-tap-highlight-color: transparent;
-      }
-      html,
-      body {
-        margin: 0;
-        padding: 0;
-        background: var(--bg);
-        color: var(--text);
-        font-family: "JetBrains Mono", monospace;
-        overflow-x: hidden;
-      }
-      ::selection {
-        background: var(--accent);
-        color: #0b0e14;
-      }
-      h1,
-      h2,
-      h3,
-      .display {
-        font-family: "Space Grotesk", sans-serif;
-      }
-      .dotgrid {
-        background-image: radial-gradient(circle, #1c2430 1px, transparent 1px);
-        background-size: 14px 14px;
-      }
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>ICONRIG — arrange skill icons for your GitHub README</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+  :root{
+    --bg: #0b0e14;
+    --panel: #121821;
+    --panel-2: #0e131a;
+    --border: #232c38;
+    --text: #dbe3ec;
+    --muted: #7c8798;
+    --accent: #c6ff5e;
+    --danger: #ff6b6b;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace; overflow-x:hidden;}
+  ::selection{background:var(--accent);color:#0b0e14;}
+  h1,h2,h3, .display{font-family:'Space Grotesk',sans-serif;}
+  .dotgrid{background-image: radial-gradient(circle, #1c2430 1px, transparent 1px); background-size: 14px 14px;}
 
-      header {
-        padding: 28px 32px 20px;
-        border-bottom: 1px solid var(--border);
-      }
-      header h1 {
-        font-size: 22px;
-        font-weight: 700;
-        margin: 0 0 4px;
-        letter-spacing: 0.5px;
-      }
-      header h1 span {
-        color: var(--accent);
-      }
-      header p {
-        margin: 0;
-        color: var(--muted);
-        font-size: 13px;
-      }
+  header{padding: 28px 32px 20px; border-bottom: 1px solid var(--border);}
+  header h1{font-size: 22px; font-weight: 700; margin: 0 0 4px; letter-spacing: 0.5px;}
+  header h1 span{color:var(--accent);}
+  header p{margin:0; color:var(--muted); font-size:13px;}
 
-      .layout {
-        display: grid;
-        grid-template-columns: 380px 1fr;
-        gap: 0;
-        min-height: calc(100vh - 84px);
-      }
-      @media (max-width: 880px) {
-        .layout {
-          grid-template-columns: 1fr;
-        }
-        header {
-          padding: 20px 16px 16px;
-        }
-        .col {
-          padding: 16px 16px;
-        }
-      }
+  .layout{display:grid; grid-template-columns: 380px minmax(0, 1fr); gap: 0; min-height: calc(100vh - 84px);}
+  @media (max-width: 880px){
+    .layout{grid-template-columns: minmax(0, 1fr);}
+    header{padding: 20px 16px 16px;}
+    .col{padding: 16px 16px;}
+  }
 
-      .col {
-        padding: 22px 24px;
-      }
-      .col-left {
-        border-right: 1px solid var(--border);
-        background: var(--panel-2);
-      }
-      @media (max-width: 880px) {
-        .col-left {
-          border-right: none;
-          border-bottom: 1px solid var(--border);
-        }
-      }
+  .col{padding: 22px 24px; min-width: 0;}
+  .col-left{border-right:1px solid var(--border); background: var(--panel-2);}
+  @media (max-width: 880px){ .col-left{border-right:none; border-bottom:1px solid var(--border);} }
 
-      .section-label {
-        font-size: 11px;
-        letter-spacing: 1.5px;
-        text-transform: uppercase;
-        color: var(--muted);
-        margin: 0 0 10px;
-        font-weight: 600;
-      }
+  .section-label{font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); margin: 0 0 10px; font-weight:600;}
 
-      .dropzone {
-        border: 1.5px dashed var(--border);
-        border-radius: 10px;
-        padding: 18px 14px;
-        text-align: center;
-        color: var(--muted);
-        font-size: 12.5px;
-        cursor: pointer;
-        transition:
-          border-color 0.15s,
-          background 0.15s;
-        margin-bottom: 10px;
-      }
-      .dropzone:hover,
-      .dropzone.drag-over {
-        border-color: var(--accent);
-        background: rgba(198, 255, 94, 0.05);
-        color: var(--text);
-      }
-      .dropzone strong {
-        color: var(--text);
-        display: block;
-        margin-bottom: 2px;
-        font-size: 13px;
-      }
-      .upload-actions {
-        display: flex;
-        gap: 8px;
-        margin-bottom: 14px;
-      }
-      .upload-actions button {
-        flex: 1;
-      }
+  .dropzone{
+    border: 1.5px dashed var(--border); border-radius: 10px; padding: 18px 14px;
+    text-align:center; color: var(--muted); font-size:12.5px; cursor:pointer;
+    transition: border-color .15s, background .15s; margin-bottom:10px;
+  }
+  .dropzone:hover, .dropzone.drag-over{ border-color: var(--accent); background: rgba(198,255,94,0.05); color: var(--text); }
+  .dropzone strong{color:var(--text); display:block; margin-bottom:2px; font-size:13px;}
+  .upload-actions{display:flex; gap:8px; margin-bottom:14px;}
+  .upload-actions button{flex:1;}
 
-      #progress-wrap {
-        display: none;
-        margin-bottom: 14px;
-      }
-      #progress-wrap.active {
-        display: block;
-      }
-      #progress-bar-track {
-        width: 100%;
-        height: 6px;
-        border-radius: 4px;
-        background: var(--panel-2);
-        border: 1px solid var(--border);
-        overflow: hidden;
-      }
-      #progress-bar-fill {
-        height: 100%;
-        width: 0%;
-        background: var(--accent);
-        transition: width 0.1s linear;
-      }
-      #progress-label {
-        font-size: 11px;
-        color: var(--muted);
-        margin-top: 5px;
-      }
+  #progress-wrap{display:none; margin-bottom:14px;}
+  #progress-wrap.active{display:block;}
+  #progress-bar-track{width:100%; height:6px; border-radius:4px; background:var(--panel-2); border:1px solid var(--border); overflow:hidden;}
+  #progress-bar-fill{height:100%; width:0%; background:var(--accent); transition: width .1s linear;}
+  #progress-label{font-size:11px; color:var(--muted); margin-top:5px;}
 
-      button {
-        font-family: "JetBrains Mono", monospace;
-        font-size: 12px;
-        border-radius: 7px;
-        border: 1px solid var(--border);
-        background: var(--panel);
-        color: var(--text);
-        padding: 9px 11px;
-        cursor: pointer;
-        transition: all 0.12s;
-        touch-action: manipulation;
-        min-height: 38px;
-      }
-      button:hover {
-        border-color: #3a4656;
-        background: #171f2b;
-      }
-      button:disabled {
-        opacity: 0.35;
-        cursor: not-allowed;
-      }
-      button.primary {
-        background: var(--accent);
-        color: #0b0e14;
-        border-color: var(--accent);
-        font-weight: 600;
-      }
-      button.primary:hover {
-        background: #d4ff82;
-      }
-      button.ghost {
-        background: transparent;
-      }
-      button.danger:hover {
-        border-color: var(--danger);
-        color: var(--danger);
-      }
+  button{
+    font-family:'JetBrains Mono',monospace; font-size:12px; border-radius:7px; border:1px solid var(--border);
+    background: var(--panel); color: var(--text); padding:9px 11px; cursor:pointer; transition: all .12s;
+    touch-action: manipulation; min-height:38px;
+  }
+  button:hover{border-color:#3a4656; background:#171f2b;}
+  button:disabled{opacity:.35; cursor:not-allowed;}
+  button.primary{ background: var(--accent); color:#0b0e14; border-color: var(--accent); font-weight:600; }
+  button.primary:hover{background:#d4ff82;}
+  button.ghost{background:transparent;}
+  button.danger:hover{border-color:var(--danger); color:var(--danger);}
 
-      #search-wrap {
-        position: relative;
-        margin-bottom: 10px;
-      }
-      #search-input {
-        width: 100%;
-        background: var(--panel);
-        border: 1px solid var(--border);
-        color: var(--text);
-        border-radius: 8px;
-        padding: 10px 10px 10px 30px;
-        font-family: "JetBrains Mono", monospace;
-        font-size: 13px;
-      }
-      #search-wrap::before {
-        content: "⌕";
-        position: absolute;
-        left: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--muted);
-        font-size: 14px;
-      }
+  #search-wrap{position:relative; margin-bottom:10px;}
+  #search-input{
+    width:100%; background:var(--panel); border:1px solid var(--border); color:var(--text);
+    border-radius:8px; padding:10px 10px 10px 30px; font-family:'JetBrains Mono',monospace; font-size:13px;
+  }
+  #search-wrap::before{
+    content:"⌕"; position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--muted); font-size:14px;
+  }
 
-      .palette-toolbar {
-        display: flex;
-        gap: 8px;
-        margin-bottom: 10px;
-        flex-wrap: wrap;
-      }
-      .palette-toolbar button {
-        flex: 1;
-        min-width: 100px;
-      }
+  .palette-toolbar{display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;}
+  .palette-toolbar button{flex:1; min-width:100px;}
 
-      #palette-viewport {
-        position: relative;
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        height: 420px;
-        overflow-y: auto;
-        overflow-x: hidden;
-        background: var(--panel);
-        -webkit-user-select: none;
-        user-select: none;
-        -webkit-overflow-scrolling: touch;
-        overscroll-behavior: contain;
-        touch-action: pan-y;
-      }
-      @media (max-width: 880px) {
-        #palette-viewport {
-          height: 46vh;
-          min-height: 260px;
-        }
-      }
-      #palette-viewport.empty::after {
-        content: "No icons yet — drop .svg files or a whole folder above";
-        color: var(--muted);
-        font-size: 12px;
-        position: absolute;
-        inset: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        padding: 0 20px;
-      }
-      #palette-sizer {
-        position: relative;
-        width: 100%;
-      }
+  #palette-viewport{
+    position:relative; border:1px solid var(--border); border-radius:10px;
+    height: 420px; overflow-y:auto; overflow-x:hidden; background: var(--panel);
+    -webkit-user-select:none; user-select:none;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+  }
+  @media (max-width: 880px){ #palette-viewport{ height: 46vh; min-height:260px; } }
+  #palette-viewport.empty::after{
+    content:"No icons yet — drop .svg files or a whole folder above";
+    color:var(--muted); font-size:12px; position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center; text-align:center; padding: 0 20px;
+  }
+  #palette-sizer{position:relative; width:100%;}
 
-      .icon-tile {
-        position: absolute;
-        width: 48px;
-        height: 48px;
-        border-radius: 8px;
-        border: 1.5px solid var(--border);
-        background: var(--panel-2);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: grab;
-        flex-shrink: 0;
-        -webkit-touch-callout: none;
-        -webkit-user-select: none;
-        user-select: none;
-        touch-action: none;
-      }
-      .icon-tile img {
-        width: 66%;
-        height: 66%;
-        display: block;
-        pointer-events: none;
-        -webkit-user-drag: none;
-      }
-      .icon-tile.selected {
-        border-color: var(--accent);
-        box-shadow: 0 0 0 1px var(--accent);
-      }
-      .icon-tile.dragging-source {
-        opacity: 0.35;
-      }
-      .icon-tile .tag {
-        position: absolute;
-        bottom: -15px;
-        left: -4px;
-        right: -4px;
-        text-align: center;
-        font-size: 8px;
-        color: var(--muted);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        pointer-events: none;
-      }
-      .icon-tile .del {
-        position: absolute;
-        top: -7px;
-        right: -7px;
-        width: 18px;
-        height: 18px;
-        border-radius: 50%;
-        background: var(--panel);
-        border: 1px solid var(--border);
-        color: var(--muted);
-        font-size: 11px;
-        line-height: 16px;
-        text-align: center;
-        display: none;
-        cursor: pointer;
-        touch-action: manipulation;
-      }
-      .icon-tile:hover .del {
-        display: block;
-      }
-      .icon-tile .del:hover {
-        color: var(--danger);
-        border-color: var(--danger);
-      }
+  .icon-tile{
+    position:absolute; width:48px;height:48px; border-radius:8px; border:1.5px solid var(--border);
+    background: var(--panel-2); display:flex;align-items:center;justify-content:center;
+    cursor:grab; flex-shrink:0;
+    -webkit-touch-callout: none; -webkit-user-select:none; user-select:none;
+    touch-action: pan-x pan-y;
+  }
+  .icon-tile img{width:66%;height:66%;display:block; pointer-events:none; -webkit-user-drag:none;}
+  .icon-tile.selected{ border-color:var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .icon-tile.dragging-source{ opacity:0.35; }
+  .icon-tile .tag{
+    position:absolute; bottom:-15px; left:-4px; right:-4px; text-align:center; font-size:8px;
+    color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; pointer-events:none;
+  }
+  .icon-tile .del{
+    position:absolute; top:-7px; right:-7px; width:18px;height:18px;border-radius:50%;
+    background:var(--panel); border:1px solid var(--border); color:var(--muted); font-size:11px;
+    line-height:16px; text-align:center; display:none; cursor:pointer; touch-action: manipulation;
+  }
+  .icon-tile:hover .del{display:block;}
+  .icon-tile .del:hover{color:var(--danger); border-color:var(--danger);}
 
-      #selection-box {
-        position: fixed;
-        border: 1px dashed var(--accent);
-        background: rgba(198, 255, 94, 0.08);
-        pointer-events: none;
-        display: none;
-        z-index: 50;
-      }
+  #selection-box{
+    position:fixed; border:1px dashed var(--accent); background: rgba(198,255,94,0.08);
+    pointer-events:none; display:none; z-index: 50;
+  }
 
-      .settings-row {
-        display: flex;
-        gap: 18px;
-        flex-wrap: wrap;
-        margin-bottom: 18px;
-        padding: 14px 16px;
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        background: var(--panel);
-      }
-      .field {
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-      }
-      .field label {
-        font-size: 10.5px;
-        color: var(--muted);
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-      }
-      .field input[type="number"] {
-        width: 64px;
-        background: var(--panel-2);
-        border: 1px solid var(--border);
-        color: var(--text);
-        border-radius: 6px;
-        padding: 8px;
-        font-family: "JetBrains Mono", monospace;
-        font-size: 14px;
-      }
-      .field select {
-        background: var(--panel-2);
-        border: 1px solid var(--border);
-        color: var(--text);
-        border-radius: 6px;
-        padding: 8px;
-        font-family: "JetBrains Mono", monospace;
-        font-size: 13px;
-      }
-      .field input[type="range"] {
-        accent-color: var(--accent);
-        width: 100px;
-        touch-action: none;
-      }
-      .field .val {
-        font-size: 11px;
-        color: var(--accent);
-      }
-      .field-row {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-      .num-inline {
-        width: 52px !important;
-        background: var(--panel-2);
-        border: 1px solid var(--border);
-        color: var(--text);
-        border-radius: 6px;
-        padding: 8px 6px;
-        font-family: "JetBrains Mono", monospace;
-        font-size: 13px;
-        text-align: center;
-        flex-shrink: 0;
-      }
+  .settings-row{
+    display:flex; gap:18px; flex-wrap:wrap; margin-bottom:18px; padding:14px 16px;
+    border:1px solid var(--border); border-radius:10px; background:var(--panel);
+  }
+  .field{display:flex; flex-direction:column; gap:5px;}
+  .field label{font-size:10.5px; color:var(--muted); letter-spacing:0.5px; text-transform:uppercase;}
+  .field input[type=number]{
+    width:64px; background:var(--panel-2); border:1px solid var(--border); color:var(--text);
+    border-radius:6px; padding:8px; font-family:'JetBrains Mono',monospace; font-size:14px;
+  }
+  .field select{
+    background:var(--panel-2); border:1px solid var(--border); color:var(--text);
+    border-radius:6px; padding:8px; font-family:'JetBrains Mono',monospace; font-size:13px;
+  }
+  .field input[type=range]{accent-color:var(--accent); width:100px; touch-action:none;}
+  .field .val{font-size:11px; color:var(--accent);}
+  .field-row{display:flex; align-items:center; gap:8px;}
+  .num-inline{
+    width:52px !important; background:var(--panel-2); border:1px solid var(--border); color:var(--text);
+    border-radius:6px; padding:8px 6px; font-family:'JetBrains Mono',monospace; font-size:13px; text-align:center;
+    flex-shrink:0;
+  }
 
-      #canvas-wrap {
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        padding: 18px;
-        min-height: 180px;
-        margin-bottom: 18px;
-        background: var(--panel);
-        touch-action: pan-y;
-      }
-      #canvas-wrap.empty::after {
-        content: 'Select icons on the left, then "Add to grid" — or press and drag one straight in here.';
-        color: var(--muted);
-        font-size: 12.5px;
-        display: block;
-        text-align: center;
-        padding: 40px 10px;
-      }
-      #canvas {
-        display: grid;
-        gap: 8px;
-        justify-content: start;
-      }
-      .canvas-tile {
-        position: relative;
-        border: 1.5px solid var(--border);
-        border-radius: 8px;
-        background: var(--panel-2);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: grab;
-        -webkit-touch-callout: none;
-        -webkit-user-select: none;
-        user-select: none;
-        touch-action: none;
-      }
-      .canvas-tile img {
-        width: 70%;
-        height: 70%;
-        pointer-events: none;
-        -webkit-user-drag: none;
-      }
-      .canvas-tile.drag-over-target {
-        border-color: var(--accent);
-        box-shadow: 0 0 0 1px var(--accent);
-      }
-      .canvas-tile.dragging-source {
-        opacity: 0.35;
-      }
-      .canvas-tile .del {
-        position: absolute;
-        top: -8px;
-        right: -8px;
-        width: 18px;
-        height: 18px;
-        border-radius: 50%;
-        background: var(--panel);
-        border: 1px solid var(--border);
-        color: var(--muted);
-        font-size: 11px;
-        line-height: 16px;
-        text-align: center;
-        display: none;
-        cursor: pointer;
-        touch-action: manipulation;
-      }
-      .canvas-tile:hover .del {
-        display: block;
-      }
-      .canvas-tile .del:hover {
-        color: var(--danger);
-        border-color: var(--danger);
-      }
+  #canvas-wrap{
+    border:1px solid var(--border); border-radius:10px; padding:18px; margin-bottom:18px; background: var(--panel);
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: auto;
+    touch-action: pan-x pan-y;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+  #canvas-wrap.empty{ min-height: 148px; }
 
-      /* touchscreens have no :hover — keep delete buttons reachable */
-      @media (hover: none) {
-        .icon-tile .del,
-        .canvas-tile .del {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-      }
+  #canvas-wrap.empty::after{
+    content:"Select icons on the left, then \"Add to grid\" — or press and drag one straight in here.";
+    color:var(--muted); font-size:12.5px; position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center; text-align:center; padding:0 20px;
+  }
+  #canvas{
+    display:grid; justify-content:start; gap: 8px; min-width:max-content; transition: gap .1s ease;
+  }
+  .canvas-tile{
+    position:relative; border:1.5px solid var(--border); border-radius:8px; background:var(--panel-2);
+    display:flex; align-items:center; justify-content:center; cursor:grab;
+    -webkit-touch-callout: none; -webkit-user-select:none; user-select:none;
+    touch-action: pan-x pan-y;
+    width: var(--tile-size, 40px); height: var(--tile-size, 40px);
+    transition: width .1s ease, height .1s ease;
+  }
+  .canvas-tile img{width:70%;height:70%; pointer-events:none; -webkit-user-drag:none;}
+  .canvas-tile.drag-over-target{border-color:var(--accent); box-shadow: 0 0 0 1px var(--accent);}
+  .canvas-tile.dragging-source{ opacity:0.35; }
+  .canvas-tile .del{
+    position:absolute; top:-8px; right:-8px; width:18px;height:18px;border-radius:50%;
+    background:var(--panel); border:1px solid var(--border); color:var(--muted); font-size:11px;
+    line-height:16px; text-align:center; display:none; cursor:pointer; touch-action: manipulation;
+  }
+  .canvas-tile:hover .del{display:block;}
+  .canvas-tile .del:hover{color:var(--danger); border-color:var(--danger);}
 
-      .drag-ghost {
-        position: fixed;
-        left: 0;
-        top: 0;
-        z-index: 9999;
-        pointer-events: none;
-        border: 2px solid var(--accent);
-        border-radius: 8px;
-        background: var(--panel-2);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        opacity: 0.9;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
-      }
-      .drag-ghost img {
-        width: 66%;
-        height: 66%;
-      }
+  /* touchscreens have no :hover — keep delete buttons reachable */
+  @media (hover: none){
+    .icon-tile .del, .canvas-tile .del{ display:flex; align-items:center; justify-content:center; }
+  }
 
-      .output-box {
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        padding: 16px;
-        background: var(--panel);
-      }
-      textarea {
-        width: 100%;
-        min-height: 120px;
-        resize: vertical;
-        background: var(--panel-2);
-        color: var(--text);
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        padding: 10px;
-        font-family: "JetBrains Mono", monospace;
-        font-size: 12px;
-        line-height: 1.5;
-      }
-      .output-actions {
-        display: flex;
-        gap: 8px;
-        margin-top: 12px;
-        flex-wrap: wrap;
-      }
-      .output-actions button {
-        flex: 1;
-        min-width: 140px;
-      }
-      .hint {
-        color: var(--muted);
-        font-size: 11.5px;
-        margin-top: 10px;
-        line-height: 1.6;
-      }
-      .count-pill {
-        font-size: 10.5px;
-        background: var(--panel-2);
-        border: 1px solid var(--border);
-        border-radius: 20px;
-        padding: 2px 9px;
-        color: var(--muted);
-      }
-      .row-between {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 10px;
-      }
-    </style>
-  </head>
-  <body>
-    <header>
-      <h1>ICON<span>RIG</span></h1>
-      <p>
-        Drag-select skill icons, lay them out on a grid, export a zip with the SVGs and a ready-to-paste README snippet. Works with a handful of icons or a few
-        thousand.
-      </p>
-    </header>
+  .drag-ghost{
+    position:fixed; left:0; top:0; z-index:9999; pointer-events:none;
+    border:2px solid var(--accent); border-radius:8px; background:var(--panel-2);
+    display:flex; align-items:center; justify-content:center; opacity:0.9;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+  }
+  .drag-ghost img{width:66%; height:66%;}
 
-    <div class="layout">
-      <div class="col col-left">
-        <div class="section-label">Upload</div>
-        <div class="dropzone" id="dropzone">
-          <strong>Drop .svg files or a whole folder here</strong>
-          or tap to browse
-          <input type="file" id="file-input" accept=".svg,image/svg+xml" multiple style="display: none" />
-          <input type="file" id="folder-input" webkitdirectory directory multiple style="display: none" />
-        </div>
-        <div class="upload-actions">
-          <button id="btn-browse-files" class="ghost">Browse files</button>
-          <button id="btn-browse-folder" class="ghost">Browse folder</button>
-        </div>
-        <div id="progress-wrap">
-          <div id="progress-bar-track"><div id="progress-bar-fill"></div></div>
-          <div id="progress-label"></div>
-        </div>
+  .output-box{border:1px solid var(--border); border-radius:10px; padding:16px; background:var(--panel);}
+  textarea{
+    width:100%; min-height:120px; resize:vertical; background:var(--panel-2); color:var(--text);
+    border:1px solid var(--border); border-radius:8px; padding:10px; font-family:'JetBrains Mono',monospace;
+    font-size:12px; line-height:1.5;
+  }
+  .output-actions{display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;}
+  .output-actions button{flex:1; min-width:140px;}
+  .hint{color:var(--muted); font-size:11.5px; margin-top:10px; line-height:1.6;}
+  .count-pill{font-size:10.5px; background:var(--panel-2); border:1px solid var(--border); border-radius:20px; padding:2px 9px; color:var(--muted);}
+  .row-between{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+</style>
+</head>
+<body>
 
-        <div class="row-between">
-          <div class="section-label" style="margin: 0">Library</div>
-          <span class="count-pill" id="lib-count">0 icons</span>
-        </div>
-        <div id="search-wrap">
-          <input type="text" id="search-input" placeholder="Search icons by name… (e.g. react, docker, py)" />
-        </div>
-        <div class="palette-toolbar">
-          <button id="btn-select-all" class="ghost">Select matching</button>
-          <button id="btn-clear-sel" class="ghost">Clear selection</button>
-          <button id="btn-add-to-grid" class="primary">Add to grid →</button>
-        </div>
-        <div id="palette-viewport" class="empty">
-          <div id="palette-sizer"></div>
-        </div>
-        <div class="hint" id="palette-hint">
-          Tap a tile to toggle it (search first if you've got a big set). On a mouse, drag a rectangle across tiles to multi-select. Press and hold a tile, then
-          drag, to drop it straight onto the grid.
+<header>
+  <h1>ICON<span>RIG</span></h1>
+  <p>Drag-select skill icons, lay them out on a grid, export a zip with the SVGs and a ready-to-paste README snippet. Works with a handful of icons, a few thousand, and on your phone.</p>
+</header>
+
+<div class="layout">
+  <div class="col col-left">
+    <div class="section-label">Upload</div>
+    <div class="dropzone" id="dropzone">
+      <strong>Drop .svg files or a whole folder here</strong>
+      or tap to browse
+      <input type="file" id="file-input" accept=".svg,image/svg+xml" multiple style="display:none">
+      <input type="file" id="folder-input" webkitdirectory directory multiple style="display:none">
+    </div>
+    <div class="upload-actions">
+      <button id="btn-browse-files" class="ghost">Browse files</button>
+      <button id="btn-browse-folder" class="ghost">Browse folder</button>
+    </div>
+    <div id="progress-wrap">
+      <div id="progress-bar-track"><div id="progress-bar-fill"></div></div>
+      <div id="progress-label"></div>
+    </div>
+
+    <div class="row-between">
+      <div class="section-label" style="margin:0;">Library</div>
+      <span class="count-pill" id="lib-count">0 icons</span>
+    </div>
+    <div id="search-wrap">
+      <input type="text" id="search-input" placeholder="Search icons by name… (e.g. react, docker, py)">
+    </div>
+    <div class="palette-toolbar">
+      <button id="btn-select-all" class="ghost">Select matching</button>
+      <button id="btn-clear-sel" class="ghost">Clear selection</button>
+      <button id="btn-add-to-grid" class="primary">Add to grid →</button>
+    </div>
+    <div id="palette-viewport" class="empty">
+      <div id="palette-sizer"></div>
+    </div>
+    <div class="hint" id="palette-hint">Tap a tile to toggle it (search first if you've got a big set). On a mouse, drag a rectangle across tiles to multi-select. Press and hold a tile, then drag, to drop it straight onto the grid.</div>
+  </div>
+
+  <div class="col">
+    <div class="section-label">Grid settings</div>
+    <div class="settings-row">
+      <div class="field">
+        <label>Columns</label>
+        <input type="number" id="cfg-cols" min="1" max="20" value="6">
+      </div>
+      <div class="field">
+        <label>Alignment</label>
+        <select id="cfg-align">
+          <option value="start">Left</option>
+          <option value="center" selected>Centered</option>
+          <option value="end">Right</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Icon size (px)</label>
+        <div class="field-row">
+          <input type="range" id="cfg-size" min="20" max="96" value="40">
+          <input type="number" id="cfg-size-num" class="num-inline" min="20" max="96" value="40">
         </div>
       </div>
-
-      <div class="col">
-        <div class="section-label">Grid settings</div>
-        <div class="settings-row">
-          <div class="field">
-            <label>Columns</label>
-            <input type="number" id="cfg-cols" min="1" max="20" value="6" />
-          </div>
-          <div class="field">
-            <label>Alignment</label>
-            <select id="cfg-align">
-              <option value="start">Left</option>
-              <option value="center" selected>Centered</option>
-              <option value="end">Right</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Icon size (px)</label>
-            <div class="field-row">
-              <input type="range" id="cfg-size" min="20" max="96" value="40" />
-              <input type="number" id="cfg-size-num" class="num-inline" min="20" max="96" value="40" />
-            </div>
-          </div>
-          <div class="field">
-            <label>Gap (px)</label>
-            <div class="field-row">
-              <input type="range" id="cfg-gap" min="0" max="32" value="8" />
-              <input type="number" id="cfg-gap-num" class="num-inline" min="0" max="32" value="8" />
-            </div>
-          </div>
-          <div class="field">
-            <label>&nbsp;</label>
-            <button id="btn-clear-canvas" class="ghost danger">Clear grid</button>
-          </div>
+      <div class="field">
+        <label>Gap (px)</label>
+        <div class="field-row">
+          <input type="range" id="cfg-gap" min="0" max="32" value="8">
+          <input type="number" id="cfg-gap-num" class="num-inline" min="0" max="32" value="8">
         </div>
-
-        <div class="row-between">
-          <div class="section-label" style="margin: 0">Grid preview</div>
-          <span class="count-pill" id="canvas-count">0 placed</span>
-        </div>
-        <div id="canvas-wrap" class="empty dotgrid">
-          <div id="canvas"></div>
-        </div>
-
-        <div class="section-label">Export</div>
-        <div class="output-box">
-          <textarea id="code-output" readonly placeholder="Your README snippet will appear here once you add icons to the grid."></textarea>
-          <div class="output-actions">
-            <button id="btn-copy" class="ghost">Copy snippet</button>
-            <button id="btn-download" class="primary">⬇ Download zip (icons + snippet)</button>
-          </div>
-          <div class="hint">
-            The zip contains an <code>icons/</code> folder with only the SVGs you actually used, plus <code>profile-readme-snippet.md</code>. Commit the
-            <code>icons</code> folder to your <code>&lt;username&gt;/&lt;username&gt;</code> profile repo (same folder as your README), then paste the snippet
-            in.
-          </div>
-        </div>
+      </div>
+      <div class="field">
+        <label>&nbsp;</label>
+        <button id="btn-clear-canvas" class="ghost danger">Clear grid</button>
       </div>
     </div>
 
-    <div id="selection-box"></div>
+    <div class="row-between">
+      <div class="section-label" style="margin:0;">Grid preview</div>
+      <span class="count-pill" id="canvas-count">0 placed</span>
+    </div>
+    <div id="canvas-wrap" class="empty dotgrid">
+      <div id="canvas"></div>
+    </div>
+    <div class="hint">This mirrors your exported layout — rows wrap per the Columns setting, height grows as needed. The preview always stays left-aligned and scrolls sideways if it runs wide (so nothing gets cut off); your chosen alignment still applies to the exported snippet below.</div>
 
-    <script>
-      ;(function () {
-        // ---------- state ----------
-        let iconSeq = 0
-        const icons = new Map() // id -> {id, name, svgText, url}
-        const nameSet = new Set() // used names, for de-duping
-        let paletteSelection = new Set()
-        let arrangement = [] // array of ids, in order
-        let filteredIds = [] // ids matching current search, in library order
-        let searchQuery = ""
+    <div class="section-label">Export</div>
+    <div class="output-box">
+      <textarea id="code-output" readonly placeholder="Your README snippet will appear here once you add icons to the grid."></textarea>
+      <div class="output-actions">
+        <button id="btn-copy" class="ghost">Copy snippet</button>
+        <button id="btn-download" class="primary">⬇ Download zip (icons + snippet)</button>
+      </div>
+      <div class="hint">
+        The zip contains an <code>icons/</code> folder with only the SVGs you actually used, plus <code>profile-readme-snippet.md</code>.
+        Commit the <code>icons</code> folder to your <code>&lt;username&gt;/&lt;username&gt;</code> profile repo (same folder as your README), then paste the snippet in.
+      </div>
+    </div>
+  </div>
+</div>
 
-        const CELL_W = 64,
-          CELL_H = 76,
-          BUFFER_ROWS = 4
+<div id="selection-box"></div>
 
-        const el = {
-          dropzone: document.getElementById("dropzone"),
-          fileInput: document.getElementById("file-input"),
-          folderInput: document.getElementById("folder-input"),
-          btnBrowseFiles: document.getElementById("btn-browse-files"),
-          btnBrowseFolder: document.getElementById("btn-browse-folder"),
-          progressWrap: document.getElementById("progress-wrap"),
-          progressFill: document.getElementById("progress-bar-fill"),
-          progressLabel: document.getElementById("progress-label"),
-          searchInput: document.getElementById("search-input"),
-          libCount: document.getElementById("lib-count"),
-          btnSelectAll: document.getElementById("btn-select-all"),
-          btnClearSel: document.getElementById("btn-clear-sel"),
-          btnAddToGrid: document.getElementById("btn-add-to-grid"),
-          paletteViewport: document.getElementById("palette-viewport"),
-          paletteSizer: document.getElementById("palette-sizer"),
-          selectionBox: document.getElementById("selection-box"),
-          cfgCols: document.getElementById("cfg-cols"),
-          cfgAlign: document.getElementById("cfg-align"),
-          cfgSize: document.getElementById("cfg-size"),
-          cfgSizeNum: document.getElementById("cfg-size-num"),
-          cfgGap: document.getElementById("cfg-gap"),
-          cfgGapNum: document.getElementById("cfg-gap-num"),
-          canvasWrap: document.getElementById("canvas-wrap"),
-          canvas: document.getElementById("canvas"),
-          canvasCount: document.getElementById("canvas-count"),
-          btnClearCanvas: document.getElementById("btn-clear-canvas"),
-          codeOutput: document.getElementById("code-output"),
-          btnCopy: document.getElementById("btn-copy"),
-          btnDownload: document.getElementById("btn-download"),
+<script>
+(function(){
+  // ---------- state ----------
+  let iconSeq = 0;
+  const icons = new Map();        // id -> {id, name, svgText, url}
+  const nameSet = new Set();      // used names, for de-duping
+  let paletteSelection = new Set();
+  let arrangement = [];            // array of ids, in order
+  let filteredIds = [];            // ids matching current search, in library order
+  let searchQuery = '';
+
+  const CELL_W = 64, CELL_H = 76, BUFFER_ROWS = 4;
+
+  const el = {
+    dropzone: document.getElementById('dropzone'),
+    fileInput: document.getElementById('file-input'),
+    folderInput: document.getElementById('folder-input'),
+    btnBrowseFiles: document.getElementById('btn-browse-files'),
+    btnBrowseFolder: document.getElementById('btn-browse-folder'),
+    progressWrap: document.getElementById('progress-wrap'),
+    progressFill: document.getElementById('progress-bar-fill'),
+    progressLabel: document.getElementById('progress-label'),
+    searchInput: document.getElementById('search-input'),
+    libCount: document.getElementById('lib-count'),
+    btnSelectAll: document.getElementById('btn-select-all'),
+    btnClearSel: document.getElementById('btn-clear-sel'),
+    btnAddToGrid: document.getElementById('btn-add-to-grid'),
+    paletteViewport: document.getElementById('palette-viewport'),
+    paletteSizer: document.getElementById('palette-sizer'),
+    selectionBox: document.getElementById('selection-box'),
+    cfgCols: document.getElementById('cfg-cols'),
+    cfgAlign: document.getElementById('cfg-align'),
+    cfgSize: document.getElementById('cfg-size'),
+    cfgSizeNum: document.getElementById('cfg-size-num'),
+    cfgGap: document.getElementById('cfg-gap'),
+    cfgGapNum: document.getElementById('cfg-gap-num'),
+    canvasWrap: document.getElementById('canvas-wrap'),
+    canvas: document.getElementById('canvas'),
+    canvasCount: document.getElementById('canvas-count'),
+    btnClearCanvas: document.getElementById('btn-clear-canvas'),
+    codeOutput: document.getElementById('code-output'),
+    btnCopy: document.getElementById('btn-copy'),
+    btnDownload: document.getElementById('btn-download'),
+  };
+
+  function sanitizeBaseName(name){
+    let base = name.replace(/\.svg$/i,'').trim();
+    base = base.replace(/[^a-z0-9_\-]+/gi,'-').replace(/^-+|-+$/g,'').toLowerCase();
+    return (base || 'icon');
+  }
+  function uniqueName(base){
+    if (!nameSet.has(base)) return base;
+    let n = 2;
+    while (nameSet.has(`${base}-${n}`)) n++;
+    return `${base}-${n}`;
+  }
+
+  function getIconUrl(icon){
+    if (!icon.url){
+      icon.url = URL.createObjectURL(new Blob([icon.svgText], { type: 'image/svg+xml' }));
+    }
+    return icon.url;
+  }
+
+  function addIconFile(name, svgText){
+    const id = 'i' + (++iconSeq);
+    const uname = uniqueName(sanitizeBaseName(name));
+    nameSet.add(uname);
+    icons.set(id, { id, name: uname, svgText, url: null });
+    return id;
+  }
+
+  // ---------- progress ----------
+  function showProgress(done, total){
+    el.progressWrap.classList.add('active');
+    const pct = total ? Math.round((done/total)*100) : 0;
+    el.progressFill.style.width = pct + '%';
+    el.progressLabel.textContent = `Reading ${done} / ${total} svgs…`;
+  }
+  function hideProgress(){
+    el.progressWrap.classList.remove('active');
+    el.progressFill.style.width = '0%';
+  }
+
+  function readSvgFile(file){
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => { addIconFile(file.name, e.target.result); resolve(); };
+      reader.onerror = () => resolve();
+      reader.readAsText(file);
+    });
+  }
+
+  async function handleFiles(fileArrayLike){
+    const files = Array.from(fileArrayLike).filter(f => /\.svg$/i.test(f.name));
+    if (!files.length) return;
+    const BATCH = 80;
+    showProgress(0, files.length);
+    for (let i = 0; i < files.length; i += BATCH){
+      const batch = files.slice(i, i + BATCH);
+      await Promise.all(batch.map(readSvgFile));
+      showProgress(Math.min(i + BATCH, files.length), files.length);
+      await new Promise(r => setTimeout(r, 0)); // yield so the UI stays responsive
+    }
+    hideProgress();
+    invalidatePaletteRange();
+    recomputeFilter();
+    renderPaletteVirtual();
+  }
+
+  // recursive folder drop support (Chrome/Edge/Firefox via webkitGetAsEntry)
+  async function collectFilesFromDataTransfer(dt){
+    const items = dt.items;
+    if (!items || !items.length || !items[0].webkitGetAsEntry){
+      return Array.from(dt.files || []);
+    }
+    const entries = Array.from(items).map(it => it.webkitGetAsEntry()).filter(Boolean);
+    const files = [];
+    async function walk(entry){
+      if (!entry) return;
+      if (entry.isFile){
+        const file = await new Promise((res) => entry.file(res, () => res(null)));
+        if (file) files.push(file);
+      } else if (entry.isDirectory){
+        const reader = entry.createReader();
+        let batch;
+        do {
+          batch = await new Promise((res) => reader.readEntries(res, () => res([])));
+          for (const e of batch) await walk(e);
+        } while (batch.length > 0);
+      }
+    }
+    for (const entry of entries) await walk(entry);
+    return files;
+  }
+
+  // ---------- upload UI ----------
+  el.btnBrowseFiles.addEventListener('click', () => el.fileInput.click());
+  el.btnBrowseFolder.addEventListener('click', () => el.folderInput.click());
+  el.dropzone.addEventListener('click', (e) => { if (e.target.tagName !== 'INPUT') el.fileInput.click(); });
+  el.fileInput.addEventListener('change', (e) => { handleFiles(e.target.files); e.target.value = ''; });
+  el.folderInput.addEventListener('change', (e) => { handleFiles(e.target.files); e.target.value = ''; });
+
+  ['dragenter','dragover'].forEach(evt => {
+    el.dropzone.addEventListener(evt, (e) => { e.preventDefault(); el.dropzone.classList.add('drag-over'); });
+  });
+  ['dragleave'].forEach(evt => {
+    el.dropzone.addEventListener(evt, (e) => { e.preventDefault(); el.dropzone.classList.remove('drag-over'); });
+  });
+  el.dropzone.addEventListener('drop', async (e) => {
+    e.preventDefault();
+    el.dropzone.classList.remove('drag-over');
+    const files = await collectFilesFromDataTransfer(e.dataTransfer);
+    if (files.length) handleFiles(files);
+  });
+
+  // ---------- search ----------
+  function recomputeFilter(){
+    const q = searchQuery.trim().toLowerCase();
+    filteredIds = [];
+    icons.forEach(icon => { if (!q || icon.name.includes(q)) filteredIds.push(icon.id); });
+    el.libCount.textContent = q
+      ? `${filteredIds.length} / ${icons.size} icons`
+      : `${icons.size} icon${icons.size === 1 ? '' : 's'}`;
+  }
+  el.searchInput.addEventListener('input', () => {
+    searchQuery = el.searchInput.value;
+    recomputeFilter();
+    el.paletteViewport.scrollTop = 0;
+    invalidatePaletteRange();
+    renderPaletteVirtual();
+  });
+
+  // ---------- virtualized palette ----------
+  function paletteColumns(){
+    return Math.max(1, Math.floor(el.paletteViewport.clientWidth / CELL_W));
+  }
+
+  let lastRange = { start: -1, end: -1, cols: -1, len: -1 };
+  function invalidatePaletteRange(){ lastRange = { start: -1, end: -1, cols: -1, len: -1 }; }
+
+  function renderPaletteVirtual(force){
+    el.paletteViewport.classList.toggle('empty', icons.size === 0);
+    const cols = paletteColumns();
+    const totalRows = Math.ceil(filteredIds.length / cols);
+    el.paletteSizer.style.height = (totalRows * CELL_H) + 'px';
+
+    const scrollTop = el.paletteViewport.scrollTop;
+    const viewH = el.paletteViewport.clientHeight;
+    const startRow = Math.max(0, Math.floor(scrollTop / CELL_H) - BUFFER_ROWS);
+    const endRow = Math.min(totalRows, Math.ceil((scrollTop + viewH) / CELL_H) + BUFFER_ROWS);
+
+    if (!force && lastRange.start === startRow && lastRange.end === endRow &&
+        lastRange.cols === cols && lastRange.len === filteredIds.length){
+      return; // nothing changed — skip the rebuild to avoid jank while scrolling
+    }
+    lastRange = { start: startRow, end: endRow, cols, len: filteredIds.length };
+
+    el.paletteSizer.innerHTML = '';
+    for (let row = startRow; row < endRow; row++){
+      for (let col = 0; col < cols; col++){
+        const idx = row * cols + col;
+        if (idx >= filteredIds.length) continue;
+        const id = filteredIds[idx];
+        const icon = icons.get(id);
+        if (!icon) continue;
+        el.paletteSizer.appendChild(makePaletteTile(icon, col * CELL_W, row * CELL_H));
+      }
+    }
+  }
+
+  function makePaletteTile(icon, x, y){
+    const tile = document.createElement('div');
+    tile.className = 'icon-tile' + (paletteSelection.has(icon.id) ? ' selected' : '');
+    tile.style.left = x + 'px';
+    tile.style.top = y + 'px';
+    tile.dataset.id = icon.id;
+
+    const img = document.createElement('img');
+    img.src = getIconUrl(icon);
+    img.alt = icon.name;
+    img.draggable = false;
+    tile.appendChild(img);
+
+    const tag = document.createElement('div');
+    tag.className = 'tag';
+    tag.textContent = icon.name;
+    tile.appendChild(tag);
+
+    const del = document.createElement('div');
+    del.className = 'del';
+    del.textContent = '×';
+    del.title = 'Remove from library';
+    del.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (icon.url) URL.revokeObjectURL(icon.url);
+      nameSet.delete(icon.name);
+      icons.delete(icon.id);
+      paletteSelection.delete(icon.id);
+      arrangement = arrangement.filter(id => id !== icon.id);
+      recomputeFilter();
+      invalidatePaletteRange();
+      renderPaletteVirtual(true);
+      renderCanvas();
+    });
+    tile.appendChild(del);
+
+    tile.addEventListener('click', (e) => {
+      if (tile._suppressClick){ tile._suppressClick = false; return; }
+      e.stopPropagation();
+      if (paletteSelection.has(icon.id)) paletteSelection.delete(icon.id);
+      else paletteSelection.add(icon.id);
+      tile.classList.toggle('selected');
+    });
+
+    attachDragSource(tile, () => ({ source: 'palette', id: icon.id }));
+
+    return tile;
+  }
+
+  let scrollRaf = null;
+  el.paletteViewport.addEventListener('scroll', () => {
+    if (scrollRaf) return;
+    scrollRaf = requestAnimationFrame(() => { scrollRaf = null; renderPaletteVirtual(); });
+  });
+  window.addEventListener('resize', () => { invalidatePaletteRange(); renderPaletteVirtual(true); });
+
+  el.btnSelectAll.addEventListener('click', () => {
+    filteredIds.forEach(id => paletteSelection.add(id));
+    invalidatePaletteRange();
+    renderPaletteVirtual(true);
+  });
+  el.btnClearSel.addEventListener('click', () => {
+    paletteSelection.clear();
+    invalidatePaletteRange();
+    renderPaletteVirtual(true);
+  });
+  el.btnAddToGrid.addEventListener('click', () => {
+    paletteSelection.forEach(id => {
+      if (icons.has(id) && !arrangement.includes(id)) arrangement.push(id);
+    });
+    paletteSelection.clear();
+    invalidatePaletteRange();
+    renderPaletteVirtual(true);
+    renderCanvas();
+  });
+
+  // ---------- rubber-band selection (mouse only — touch uses tap + long-press-drag) ----------
+  let dragStart = null;
+  let didDrag = false;
+
+  el.paletteViewport.addEventListener('pointerdown', (e) => {
+    if (e.pointerType !== 'mouse') return;
+    if (e.target.closest('.icon-tile')) return;
+    dragStart = { x: e.clientX, y: e.clientY };
+    didDrag = false;
+    if (!e.shiftKey) paletteSelection.clear();
+  });
+
+  document.addEventListener('pointermove', (e) => {
+    if (!dragStart || e.pointerType !== 'mouse') return;
+    const dx = Math.abs(e.clientX - dragStart.x);
+    const dy = Math.abs(e.clientY - dragStart.y);
+    if (dx > 4 || dy > 4) didDrag = true;
+    if (!didDrag) return;
+
+    const x1 = Math.min(dragStart.x, e.clientX);
+    const y1 = Math.min(dragStart.y, e.clientY);
+    const x2 = Math.max(dragStart.x, e.clientX);
+    const y2 = Math.max(dragStart.y, e.clientY);
+
+    el.selectionBox.style.display = 'block';
+    el.selectionBox.style.left = x1 + 'px';
+    el.selectionBox.style.top = y1 + 'px';
+    el.selectionBox.style.width = (x2 - x1) + 'px';
+    el.selectionBox.style.height = (y2 - y1) + 'px';
+
+    document.querySelectorAll('#palette-sizer .icon-tile').forEach(tile => {
+      const r = tile.getBoundingClientRect();
+      const intersects = !(r.right < x1 || r.left > x2 || r.bottom < y1 || r.top > y2);
+      const id = tile.dataset.id;
+      if (intersects) paletteSelection.add(id);
+      tile.classList.toggle('selected', paletteSelection.has(id));
+    });
+  });
+
+  document.addEventListener('pointerup', (e) => {
+    if (e.pointerType !== 'mouse') return;
+    dragStart = null;
+    el.selectionBox.style.display = 'none';
+    didDrag = false;
+  });
+
+  // ---------- unified pointer-based drag & drop (mouse: instant, touch: long-press then drag) ----------
+  let currentDrag = null; // { payload, sourceEl, ghostEl }
+
+  function attachDragSource(tileEl, payloadFn){
+    let pointerId = null, startX = 0, startY = 0, moved = false, dragging = false, pressTimer = null;
+
+    tileEl.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      pointerId = e.pointerId;
+      startX = e.clientX; startY = e.clientY;
+      moved = false; dragging = false;
+      clearTimeout(pressTimer);
+
+      if (e.pointerType === 'touch' || e.pointerType === 'pen'){
+        pressTimer = setTimeout(() => {
+          if (!moved) beginDrag(e);
+        }, 170);
+      }
+      // mouse starts the drag lazily, once movement crosses the threshold (see pointermove)
+    });
+
+    tileEl.addEventListener('pointermove', (e) => {
+      if (e.pointerId !== pointerId) return;
+      const dx = e.clientX - startX, dy = e.clientY - startY;
+
+      if (!dragging && !moved && Math.hypot(dx, dy) > 8){
+        moved = true;
+        if (e.pointerType === 'mouse'){
+          beginDrag(e);
+        } else {
+          clearTimeout(pressTimer); // finger moved before the long-press fired: treat as a scroll
         }
-
-        function sanitizeBaseName(name) {
-          let base = name.replace(/\.svg$/i, "").trim()
-          base = base
-            .replace(/[^a-z0-9_\-]+/gi, "-")
-            .replace(/^-+|-+$/g, "")
-            .toLowerCase()
-          return base || "icon"
-        }
-        function uniqueName(base) {
-          if (!nameSet.has(base)) return base
-          let n = 2
-          while (nameSet.has(`${base}-${n}`)) n++
-          return `${base}-${n}`
-        }
-
-        function getIconUrl(icon) {
-          if (!icon.url) {
-            icon.url = URL.createObjectURL(new Blob([icon.svgText], { type: "image/svg+xml" }))
-          }
-          return icon.url
-        }
-
-        function addIconFile(name, svgText) {
-          const id = "i" + ++iconSeq
-          const uname = uniqueName(sanitizeBaseName(name))
-          nameSet.add(uname)
-          icons.set(id, { id, name: uname, svgText, url: null })
-          return id
-        }
-
-        // ---------- progress ----------
-        function showProgress(done, total) {
-          el.progressWrap.classList.add("active")
-          const pct = total ? Math.round((done / total) * 100) : 0
-          el.progressFill.style.width = pct + "%"
-          el.progressLabel.textContent = `Reading ${done} / ${total} svgs…`
-        }
-        function hideProgress() {
-          el.progressWrap.classList.remove("active")
-          el.progressFill.style.width = "0%"
-        }
-
-        function readSvgFile(file) {
-          return new Promise((resolve) => {
-            const reader = new FileReader()
-            reader.onload = (e) => {
-              addIconFile(file.name, e.target.result)
-              resolve()
-            }
-            reader.onerror = () => resolve()
-            reader.readAsText(file)
-          })
-        }
-
-        async function handleFiles(fileArrayLike) {
-          const files = Array.from(fileArrayLike).filter((f) => /\.svg$/i.test(f.name))
-          if (!files.length) return
-          const BATCH = 80
-          showProgress(0, files.length)
-          for (let i = 0; i < files.length; i += BATCH) {
-            const batch = files.slice(i, i + BATCH)
-            await Promise.all(batch.map(readSvgFile))
-            showProgress(Math.min(i + BATCH, files.length), files.length)
-            await new Promise((r) => setTimeout(r, 0)) // yield so the UI stays responsive
-          }
-          hideProgress()
-          invalidatePaletteRange()
-          recomputeFilter()
-          renderPaletteVirtual()
-        }
-
-        // recursive folder drop support (Chrome/Edge/Firefox via webkitGetAsEntry)
-        async function collectFilesFromDataTransfer(dt) {
-          const items = dt.items
-          if (!items || !items.length || !items[0].webkitGetAsEntry) {
-            return Array.from(dt.files || [])
-          }
-          const entries = Array.from(items)
-            .map((it) => it.webkitGetAsEntry())
-            .filter(Boolean)
-          const files = []
-          async function walk(entry) {
-            if (!entry) return
-            if (entry.isFile) {
-              const file = await new Promise((res) => entry.file(res, () => res(null)))
-              if (file) files.push(file)
-            } else if (entry.isDirectory) {
-              const reader = entry.createReader()
-              let batch
-              do {
-                batch = await new Promise((res) => reader.readEntries(res, () => res([])))
-                for (const e of batch) await walk(e)
-              } while (batch.length > 0)
-            }
-          }
-          for (const entry of entries) await walk(entry)
-          return files
-        }
-
-        // ---------- upload UI ----------
-        el.btnBrowseFiles.addEventListener("click", () => el.fileInput.click())
-        el.btnBrowseFolder.addEventListener("click", () => el.folderInput.click())
-        el.dropzone.addEventListener("click", (e) => {
-          if (e.target.tagName !== "INPUT") el.fileInput.click()
-        })
-        el.fileInput.addEventListener("change", (e) => {
-          handleFiles(e.target.files)
-          e.target.value = ""
-        })
-        el.folderInput.addEventListener("change", (e) => {
-          handleFiles(e.target.files)
-          e.target.value = ""
-        })
-
-        ;["dragenter", "dragover"].forEach((evt) => {
-          el.dropzone.addEventListener(evt, (e) => {
-            e.preventDefault()
-            el.dropzone.classList.add("drag-over")
-          })
-        })
-        ;["dragleave"].forEach((evt) => {
-          el.dropzone.addEventListener(evt, (e) => {
-            e.preventDefault()
-            el.dropzone.classList.remove("drag-over")
-          })
-        })
-        el.dropzone.addEventListener("drop", async (e) => {
-          e.preventDefault()
-          el.dropzone.classList.remove("drag-over")
-          const files = await collectFilesFromDataTransfer(e.dataTransfer)
-          if (files.length) handleFiles(files)
-        })
-
-        // ---------- search ----------
-        function recomputeFilter() {
-          const q = searchQuery.trim().toLowerCase()
-          filteredIds = []
-          icons.forEach((icon) => {
-            if (!q || icon.name.includes(q)) filteredIds.push(icon.id)
-          })
-          el.libCount.textContent = q ? `${filteredIds.length} / ${icons.size} icons` : `${icons.size} icon${icons.size === 1 ? "" : "s"}`
-        }
-        el.searchInput.addEventListener("input", () => {
-          searchQuery = el.searchInput.value
-          recomputeFilter()
-          el.paletteViewport.scrollTop = 0
-          invalidatePaletteRange()
-          renderPaletteVirtual()
-        })
-
-        // ---------- virtualized palette ----------
-        function paletteColumns() {
-          return Math.max(1, Math.floor(el.paletteViewport.clientWidth / CELL_W))
-        }
-
-        let lastRange = { start: -1, end: -1, cols: -1, len: -1 }
-        function invalidatePaletteRange() {
-          lastRange = { start: -1, end: -1, cols: -1, len: -1 }
-        }
-
-        function renderPaletteVirtual(force) {
-          el.paletteViewport.classList.toggle("empty", icons.size === 0)
-          const cols = paletteColumns()
-          const totalRows = Math.ceil(filteredIds.length / cols)
-          el.paletteSizer.style.height = totalRows * CELL_H + "px"
-
-          const scrollTop = el.paletteViewport.scrollTop
-          const viewH = el.paletteViewport.clientHeight
-          const startRow = Math.max(0, Math.floor(scrollTop / CELL_H) - BUFFER_ROWS)
-          const endRow = Math.min(totalRows, Math.ceil((scrollTop + viewH) / CELL_H) + BUFFER_ROWS)
-
-          if (!force && lastRange.start === startRow && lastRange.end === endRow && lastRange.cols === cols && lastRange.len === filteredIds.length) {
-            return // nothing changed — skip the rebuild to avoid jank while scrolling
-          }
-          lastRange = { start: startRow, end: endRow, cols, len: filteredIds.length }
-
-          el.paletteSizer.innerHTML = ""
-          for (let row = startRow; row < endRow; row++) {
-            for (let col = 0; col < cols; col++) {
-              const idx = row * cols + col
-              if (idx >= filteredIds.length) continue
-              const id = filteredIds[idx]
-              const icon = icons.get(id)
-              if (!icon) continue
-              el.paletteSizer.appendChild(makePaletteTile(icon, col * CELL_W, row * CELL_H))
-            }
-          }
-        }
-
-        function makePaletteTile(icon, x, y) {
-          const tile = document.createElement("div")
-          tile.className = "icon-tile" + (paletteSelection.has(icon.id) ? " selected" : "")
-          tile.style.left = x + "px"
-          tile.style.top = y + "px"
-          tile.dataset.id = icon.id
-
-          const img = document.createElement("img")
-          img.src = getIconUrl(icon)
-          img.alt = icon.name
-          img.draggable = false
-          tile.appendChild(img)
-
-          const tag = document.createElement("div")
-          tag.className = "tag"
-          tag.textContent = icon.name
-          tile.appendChild(tag)
-
-          const del = document.createElement("div")
-          del.className = "del"
-          del.textContent = "×"
-          del.title = "Remove from library"
-          del.addEventListener("click", (e) => {
-            e.stopPropagation()
-            if (icon.url) URL.revokeObjectURL(icon.url)
-            nameSet.delete(icon.name)
-            icons.delete(icon.id)
-            paletteSelection.delete(icon.id)
-            arrangement = arrangement.filter((id) => id !== icon.id)
-            recomputeFilter()
-            invalidatePaletteRange()
-            renderPaletteVirtual(true)
-            renderCanvas()
-          })
-          tile.appendChild(del)
-
-          tile.addEventListener("click", (e) => {
-            if (tile._suppressClick) {
-              tile._suppressClick = false
-              return
-            }
-            e.stopPropagation()
-            if (paletteSelection.has(icon.id)) paletteSelection.delete(icon.id)
-            else paletteSelection.add(icon.id)
-            tile.classList.toggle("selected")
-          })
-
-          attachDragSource(tile, () => ({ source: "palette", id: icon.id }))
-
-          return tile
-        }
-
-        let scrollRaf = null
-        el.paletteViewport.addEventListener("scroll", () => {
-          if (scrollRaf) return
-          scrollRaf = requestAnimationFrame(() => {
-            scrollRaf = null
-            renderPaletteVirtual()
-          })
-        })
-        window.addEventListener("resize", () => {
-          invalidatePaletteRange()
-          renderPaletteVirtual(true)
-        })
-
-        el.btnSelectAll.addEventListener("click", () => {
-          filteredIds.forEach((id) => paletteSelection.add(id))
-          invalidatePaletteRange()
-          renderPaletteVirtual(true)
-        })
-        el.btnClearSel.addEventListener("click", () => {
-          paletteSelection.clear()
-          invalidatePaletteRange()
-          renderPaletteVirtual(true)
-        })
-        el.btnAddToGrid.addEventListener("click", () => {
-          paletteSelection.forEach((id) => {
-            if (icons.has(id) && !arrangement.includes(id)) arrangement.push(id)
-          })
-          paletteSelection.clear()
-          invalidatePaletteRange()
-          renderPaletteVirtual(true)
-          renderCanvas()
-        })
-
-        // ---------- rubber-band selection (mouse only — touch uses tap + long-press-drag) ----------
-        let dragStart = null
-        let didDrag = false
-
-        el.paletteViewport.addEventListener("pointerdown", (e) => {
-          if (e.pointerType !== "mouse") return
-          if (e.target.closest(".icon-tile")) return
-          dragStart = { x: e.clientX, y: e.clientY }
-          didDrag = false
-          if (!e.shiftKey) paletteSelection.clear()
-        })
-
-        document.addEventListener("pointermove", (e) => {
-          if (!dragStart || e.pointerType !== "mouse") return
-          const dx = Math.abs(e.clientX - dragStart.x)
-          const dy = Math.abs(e.clientY - dragStart.y)
-          if (dx > 4 || dy > 4) didDrag = true
-          if (!didDrag) return
-
-          const x1 = Math.min(dragStart.x, e.clientX)
-          const y1 = Math.min(dragStart.y, e.clientY)
-          const x2 = Math.max(dragStart.x, e.clientX)
-          const y2 = Math.max(dragStart.y, e.clientY)
-
-          el.selectionBox.style.display = "block"
-          el.selectionBox.style.left = x1 + "px"
-          el.selectionBox.style.top = y1 + "px"
-          el.selectionBox.style.width = x2 - x1 + "px"
-          el.selectionBox.style.height = y2 - y1 + "px"
-
-          document.querySelectorAll("#palette-sizer .icon-tile").forEach((tile) => {
-            const r = tile.getBoundingClientRect()
-            const intersects = !(r.right < x1 || r.left > x2 || r.bottom < y1 || r.top > y2)
-            const id = tile.dataset.id
-            if (intersects) paletteSelection.add(id)
-            tile.classList.toggle("selected", paletteSelection.has(id))
-          })
-        })
-
-        document.addEventListener("pointerup", (e) => {
-          if (e.pointerType !== "mouse") return
-          dragStart = null
-          el.selectionBox.style.display = "none"
-          didDrag = false
-        })
-
-        // ---------- unified pointer-based drag & drop (mouse: instant, touch: long-press then drag) ----------
-        let currentDrag = null // { payload, sourceEl, ghostEl }
-
-        function attachDragSource(tileEl, payloadFn) {
-          let pointerId = null,
-            startX = 0,
-            startY = 0,
-            moved = false,
-            dragging = false,
-            pressTimer = null
-
-          tileEl.addEventListener("pointerdown", (e) => {
-            if (e.pointerType === "mouse" && e.button !== 0) return
-            pointerId = e.pointerId
-            startX = e.clientX
-            startY = e.clientY
-            moved = false
-            dragging = false
-            clearTimeout(pressTimer)
-
-            if (e.pointerType === "touch" || e.pointerType === "pen") {
-              pressTimer = setTimeout(() => {
-                if (!moved) beginDrag(e)
-              }, 170)
-            }
-            // mouse starts the drag lazily, once movement crosses the threshold (see pointermove)
-          })
-
-          tileEl.addEventListener("pointermove", (e) => {
-            if (e.pointerId !== pointerId) return
-            const dx = e.clientX - startX,
-              dy = e.clientY - startY
-
-            if (!dragging && !moved && Math.hypot(dx, dy) > 8) {
-              moved = true
-              if (e.pointerType === "mouse") {
-                beginDrag(e)
-              } else {
-                clearTimeout(pressTimer) // finger moved before the long-press fired: treat as a scroll
-              }
-            }
-            if (dragging) {
-              e.preventDefault()
-              moveDrag(e.clientX, e.clientY)
-            }
-          })
-
-          tileEl.addEventListener("pointerup", (e) => {
-            if (e.pointerId !== pointerId) return
-            clearTimeout(pressTimer)
-            if (dragging) {
-              tile_suppressNextClick(tileEl)
-              endDrag(e.clientX, e.clientY)
-            }
-            dragging = false
-            pointerId = null
-          })
-
-          tileEl.addEventListener("pointercancel", (e) => {
-            if (e.pointerId !== pointerId) return
-            clearTimeout(pressTimer)
-            if (dragging) abortDrag()
-            dragging = false
-            pointerId = null
-          })
-
-          function beginDrag(e) {
-            dragging = true
-            moved = true
-            try {
-              tileEl.setPointerCapture(e.pointerId)
-            } catch (err) {}
-            startGlobalDrag(payloadFn(), tileEl, e.clientX, e.clientY)
-          }
-
-          function endDrag(x, y) {
-            finishGlobalDrag(x, y)
-          }
-          function abortDrag() {
-            cancelGlobalDrag()
-          }
-        }
-
-        function tile_suppressNextClick(tileEl) {
-          tileEl._suppressClick = true
-          setTimeout(() => {
-            tileEl._suppressClick = false
-          }, 400)
-        }
-
-        function startGlobalDrag(payload, sourceEl, x, y) {
-          const w = sourceEl.offsetWidth,
-            h = sourceEl.offsetHeight
-          const ghost = document.createElement("div")
-          ghost.className = "drag-ghost"
-          ghost.style.width = w + "px"
-          ghost.style.height = h + "px"
-          const img = sourceEl.querySelector("img")
-          if (img) {
-            const gimg = document.createElement("img")
-            gimg.src = img.src
-            ghost.appendChild(gimg)
-          }
-          document.body.appendChild(ghost)
-          sourceEl.classList.add("dragging-source")
-          currentDrag = { payload, sourceEl, ghostEl: ghost }
-          positionGhost(x, y)
-          document.body.style.userSelect = "none"
-        }
-
-        function positionGhost(x, y) {
-          if (!currentDrag) return
-          const g = currentDrag.ghostEl
-          g.style.transform = `translate(${x - g.offsetWidth / 2}px, ${y - g.offsetHeight / 2}px)`
-        }
-
-        function hitTest(x, y) {
-          if (currentDrag) currentDrag.ghostEl.style.display = "none"
-          const under = document.elementFromPoint(x, y)
-          if (currentDrag) currentDrag.ghostEl.style.display = "flex"
-          return under
-        }
-
-        function moveDrag(x, y) {
-          if (!currentDrag) return
-          positionGhost(x, y)
-          document.querySelectorAll(".canvas-tile.drag-over-target").forEach((t) => t.classList.remove("drag-over-target"))
-          const under = hitTest(x, y)
-          const tile = under && under.closest && under.closest(".canvas-tile")
-          if (tile) tile.classList.add("drag-over-target")
-        }
-
-        function finishGlobalDrag(x, y) {
-          if (!currentDrag) return
-          const under = hitTest(x, y)
-          const tile = under && under.closest && under.closest(".canvas-tile")
-          const wrapHit = under && under.closest && under.closest("#canvas-wrap")
-          let targetIndex = null
-          if (tile) targetIndex = parseInt(tile.dataset.index, 10)
-          else if (wrapHit) targetIndex = arrangement.length
-
-          const payload = currentDrag.payload
-          cleanupDrag()
-          if (targetIndex !== null) applyDrop(payload, targetIndex)
-        }
-
-        function cancelGlobalDrag() {
-          cleanupDrag()
-        }
-
-        function cleanupDrag() {
-          if (!currentDrag) return
-          currentDrag.sourceEl.classList.remove("dragging-source")
-          currentDrag.ghostEl.remove()
-          document.querySelectorAll(".canvas-tile.drag-over-target").forEach((t) => t.classList.remove("drag-over-target"))
-          document.body.style.userSelect = ""
-          currentDrag = null
-        }
-
-        function applyDrop(payload, targetIndex) {
-          if (payload.source === "palette") {
-            const existingIdx = arrangement.indexOf(payload.id)
-            if (existingIdx !== -1) arrangement.splice(existingIdx, 1)
-            let insertAt = targetIndex
-            if (existingIdx !== -1 && existingIdx < targetIndex) insertAt -= 1
-            arrangement.splice(Math.min(insertAt, arrangement.length), 0, payload.id)
-          } else if (payload.source === "canvas") {
-            const fromIdx = payload.index
-            if (fromIdx === targetIndex) {
-              renderCanvas()
-              return
-            }
-            const [moved] = arrangement.splice(fromIdx, 1)
-            let insertAt = targetIndex
-            if (fromIdx < targetIndex) insertAt -= 1
-            arrangement.splice(Math.min(insertAt, arrangement.length), 0, moved)
-          }
-          renderCanvas()
-        }
-
-        // ---------- grid settings ----------
-        function clamp(v, min, max) {
-          return Math.min(max, Math.max(min, v))
-        }
-
-        function applyGridSettings() {
-          const cols = Math.max(1, parseInt(el.cfgCols.value || "1", 10))
-          const size = parseInt(el.cfgSize.value, 10)
-          const gap = parseInt(el.cfgGap.value, 10)
-          const align = el.cfgAlign.value
-          el.canvas.style.gridTemplateColumns = `repeat(${cols}, ${size}px)`
-          el.canvas.style.gap = gap + "px"
-          el.canvas.style.justifyContent = align
-          document.querySelectorAll(".canvas-tile").forEach((t) => {
-            t.style.width = size + "px"
-            t.style.height = size + "px"
-          })
-        }
-
-        // slider -> number, and number -> slider (with clamping), for size + gap
-        function linkRangeAndNumber(rangeEl, numEl) {
-          const min = parseInt(rangeEl.min, 10),
-            max = parseInt(rangeEl.max, 10)
-          rangeEl.addEventListener("input", () => {
-            numEl.value = rangeEl.value
-            applyGridSettings()
-            updateCodeOutput()
-          })
-          numEl.addEventListener("input", () => {
-            if (numEl.value === "") return // let them keep typing
-            const v = clamp(parseInt(numEl.value, 10) || min, min, max)
-            rangeEl.value = v
-            applyGridSettings()
-            updateCodeOutput()
-          })
-          numEl.addEventListener("blur", () => {
-            const v = clamp(parseInt(numEl.value, 10) || min, min, max)
-            numEl.value = v
-            rangeEl.value = v
-            applyGridSettings()
-            updateCodeOutput()
-          })
-        }
-        linkRangeAndNumber(el.cfgSize, el.cfgSizeNum)
-        linkRangeAndNumber(el.cfgGap, el.cfgGapNum)
-
-        ;[el.cfgCols, el.cfgAlign].forEach((input) => {
-          input.addEventListener("input", () => {
-            applyGridSettings()
-            updateCodeOutput()
-          })
-        })
-
-        // ---------- canvas (arrangement) rendering ----------
-        function renderCanvas() {
-          el.canvas.innerHTML = ""
-          el.canvasWrap.classList.toggle("empty", arrangement.length === 0)
-          el.canvasCount.textContent = arrangement.length + " placed"
-
-          arrangement.forEach((id, index) => {
-            const icon = icons.get(id)
-            if (!icon) return
-            const tile = document.createElement("div")
-            tile.className = "canvas-tile"
-            tile.dataset.id = id
-            tile.dataset.index = index
-            tile.title = icon.name
-
-            const img = document.createElement("img")
-            img.src = getIconUrl(icon)
-            img.alt = icon.name
-            img.draggable = false
-            tile.appendChild(img)
-
-            const del = document.createElement("div")
-            del.className = "del"
-            del.textContent = "×"
-            del.title = "Remove from grid"
-            del.addEventListener("click", (e) => {
-              e.stopPropagation()
-              arrangement.splice(index, 1)
-              renderCanvas()
-            })
-            tile.appendChild(del)
-
-            attachDragSource(tile, () => ({ source: "canvas", id, index: parseInt(tile.dataset.index, 10) }))
-
-            el.canvas.appendChild(tile)
-          })
-
-          applyGridSettings()
-          updateCodeOutput()
-        }
-
-        // allow dropping directly on empty grid background via the same pointer system:
-        // handled already because #canvas-wrap is hit-tested in finishGlobalDrag as a fallback target.
-
-        el.btnClearCanvas.addEventListener("click", () => {
-          arrangement = []
-          renderCanvas()
-        })
-
-        // ---------- code generation ----------
-        function buildSnippet() {
-          if (arrangement.length === 0) return ""
-          const cols = Math.max(1, parseInt(el.cfgCols.value || "1", 10))
-          const size = parseInt(el.cfgSize.value, 10)
-          const align = el.cfgAlign.value
-          const alignAttr = align === "start" ? "left" : align === "end" ? "right" : "center"
-
-          const lines = [`<div align="${alignAttr}">`]
-          for (let i = 0; i < arrangement.length; i += cols) {
-            const rowIds = arrangement.slice(i, i + cols)
-            const imgs = rowIds.map((id) => {
-              const icon = icons.get(id)
-              return `  <img src="icons/${icon.name}.svg" width="${size}" height="${size}" alt="${icon.name}" />`
-            })
-            lines.push(imgs.join("\n"))
-            if (i + cols < arrangement.length) lines.push("  <br/>")
-          }
-          lines.push("</div>")
-          return lines.join("\n")
-        }
-
-        function updateCodeOutput() {
-          el.codeOutput.value = buildSnippet()
-        }
-
-        el.btnCopy.addEventListener("click", async () => {
-          const text = el.codeOutput.value
-          if (!text) return
-          try {
-            await navigator.clipboard.writeText(text)
-          } catch (err) {
-            el.codeOutput.select()
-            document.execCommand("copy")
-          }
-          const original = el.btnCopy.textContent
-          el.btnCopy.textContent = "Copied ✓"
-          setTimeout(() => {
-            el.btnCopy.textContent = original
-          }, 1400)
-        })
-
-        // ---------- zip export ----------
-        el.btnDownload.addEventListener("click", async () => {
-          if (arrangement.length === 0) return
-          el.btnDownload.disabled = true
-          const original = el.btnDownload.textContent
-          el.btnDownload.textContent = "Building zip…"
-          try {
-            const zip = new JSZip()
-            const iconsFolder = zip.folder("icons")
-            const usedIds = Array.from(new Set(arrangement))
-            usedIds.forEach((id) => {
-              const icon = icons.get(id)
-              if (icon) iconsFolder.file(`${icon.name}.svg`, icon.svgText)
-            })
-
-            const snippet = buildSnippet()
-            const readmeNote = `# Skill icons — profile README snippet
+      }
+      if (dragging){
+        e.preventDefault();
+        moveDrag(e.clientX, e.clientY);
+      }
+    });
+
+    tileEl.addEventListener('pointerup', (e) => {
+      if (e.pointerId !== pointerId) return;
+      clearTimeout(pressTimer);
+      if (dragging){
+        tile_suppressNextClick(tileEl);
+        endDrag(e.clientX, e.clientY);
+      }
+      dragging = false; pointerId = null;
+    });
+
+    tileEl.addEventListener('pointercancel', (e) => {
+      if (e.pointerId !== pointerId) return;
+      clearTimeout(pressTimer);
+      if (dragging) abortDrag();
+      dragging = false; pointerId = null;
+    });
+
+    function beginDrag(e){
+      dragging = true;
+      moved = true;
+      try { tileEl.setPointerCapture(e.pointerId); } catch(err){}
+      startGlobalDrag(payloadFn(), tileEl, e.clientX, e.clientY);
+    }
+
+    function endDrag(x, y){
+      finishGlobalDrag(x, y);
+    }
+    function abortDrag(){
+      cancelGlobalDrag();
+    }
+  }
+
+  function tile_suppressNextClick(tileEl){
+    tileEl._suppressClick = true;
+    setTimeout(() => { tileEl._suppressClick = false; }, 400);
+  }
+
+  function startGlobalDrag(payload, sourceEl, x, y){
+    const w = sourceEl.offsetWidth, h = sourceEl.offsetHeight;
+    const ghost = document.createElement('div');
+    ghost.className = 'drag-ghost';
+    ghost.style.width = w + 'px';
+    ghost.style.height = h + 'px';
+    const img = sourceEl.querySelector('img');
+    if (img){
+      const gimg = document.createElement('img');
+      gimg.src = img.src;
+      ghost.appendChild(gimg);
+    }
+    document.body.appendChild(ghost);
+    sourceEl.classList.add('dragging-source');
+    currentDrag = { payload, sourceEl, ghostEl: ghost };
+    positionGhost(x, y);
+    document.body.style.userSelect = 'none';
+  }
+
+  function positionGhost(x, y){
+    if (!currentDrag) return;
+    const g = currentDrag.ghostEl;
+    g.style.transform = `translate(${x - g.offsetWidth / 2}px, ${y - g.offsetHeight / 2}px)`;
+  }
+
+  function hitTest(x, y){
+    if (currentDrag) currentDrag.ghostEl.style.display = 'none';
+    const under = document.elementFromPoint(x, y);
+    if (currentDrag) currentDrag.ghostEl.style.display = 'flex';
+    return under;
+  }
+
+  function moveDrag(x, y){
+    if (!currentDrag) return;
+    positionGhost(x, y);
+    document.querySelectorAll('.canvas-tile.drag-over-target').forEach(t => t.classList.remove('drag-over-target'));
+    const under = hitTest(x, y);
+    const tile = under && under.closest && under.closest('.canvas-tile');
+    if (tile) tile.classList.add('drag-over-target');
+  }
+
+  function finishGlobalDrag(x, y){
+    if (!currentDrag) return;
+    const under = hitTest(x, y);
+    const tile = under && under.closest && under.closest('.canvas-tile');
+    const wrapHit = under && under.closest && under.closest('#canvas-wrap');
+    let targetIndex = null;
+    if (tile) targetIndex = parseInt(tile.dataset.index, 10);
+    else if (wrapHit) targetIndex = arrangement.length;
+
+    const payload = currentDrag.payload;
+    cleanupDrag();
+    if (targetIndex !== null) applyDrop(payload, targetIndex);
+  }
+
+  function cancelGlobalDrag(){ cleanupDrag(); }
+
+  function cleanupDrag(){
+    if (!currentDrag) return;
+    currentDrag.sourceEl.classList.remove('dragging-source');
+    currentDrag.ghostEl.remove();
+    document.querySelectorAll('.canvas-tile.drag-over-target').forEach(t => t.classList.remove('drag-over-target'));
+    document.body.style.userSelect = '';
+    currentDrag = null;
+  }
+
+  function applyDrop(payload, targetIndex){
+    if (payload.source === 'palette'){
+      const existingIdx = arrangement.indexOf(payload.id);
+      if (existingIdx !== -1) arrangement.splice(existingIdx, 1);
+      let insertAt = targetIndex;
+      if (existingIdx !== -1 && existingIdx < targetIndex) insertAt -= 1;
+      arrangement.splice(Math.min(insertAt, arrangement.length), 0, payload.id);
+    } else if (payload.source === 'canvas'){
+      const fromIdx = payload.index;
+      if (fromIdx === targetIndex){ renderCanvas(); return; }
+      const [moved] = arrangement.splice(fromIdx, 1);
+      let insertAt = targetIndex;
+      if (fromIdx < targetIndex) insertAt -= 1;
+      arrangement.splice(Math.min(insertAt, arrangement.length), 0, moved);
+    }
+    renderCanvas();
+  }
+
+  // ---------- grid settings ----------
+  function clamp(v, min, max){ return Math.min(max, Math.max(min, v)); }
+
+  function applyGridSettings(){
+    const cols = Math.max(1, parseInt(el.cfgCols.value || '1', 10));
+    const size = parseInt(el.cfgSize.value, 10);
+    const gap = parseInt(el.cfgGap.value, 10);
+    el.canvas.style.gridTemplateColumns = `repeat(${cols}, var(--tile-size, ${size}px))`;
+    el.canvas.style.gap = gap + 'px';
+    // note: justify-content is intentionally NOT set here. A centered/right-aligned grid that
+    // overflows its scroll container gets its overflow clipped and unreachable in most browsers.
+    // The live preview always stays left-aligned + fully scrollable; the chosen alignment still
+    // applies correctly to the exported snippet (a static block, not a scroll area) via buildSnippet().
+    el.canvas.style.setProperty('--tile-size', size + 'px'); // one write instead of looping every tile
+  }
+
+  // batch rapid slider/number-input events into a single update per frame,
+  // so dragging on mobile doesn't force a reflow on every touchmove tick
+  let gridUpdateScheduled = false;
+  function scheduleGridUpdate(){
+    if (gridUpdateScheduled) return;
+    gridUpdateScheduled = true;
+    requestAnimationFrame(() => {
+      gridUpdateScheduled = false;
+      applyGridSettings();
+      updateCodeOutput();
+    });
+  }
+
+  // slider -> number, and number -> slider (with clamping), for size + gap
+  function linkRangeAndNumber(rangeEl, numEl){
+    const min = parseInt(rangeEl.min, 10), max = parseInt(rangeEl.max, 10);
+    rangeEl.addEventListener('input', () => {
+      numEl.value = rangeEl.value;
+      scheduleGridUpdate();
+    });
+    numEl.addEventListener('input', () => {
+      if (numEl.value === '') return; // let them keep typing
+      const v = clamp(parseInt(numEl.value, 10) || min, min, max);
+      rangeEl.value = v;
+      scheduleGridUpdate();
+    });
+    numEl.addEventListener('blur', () => {
+      const v = clamp(parseInt(numEl.value, 10) || min, min, max);
+      numEl.value = v; rangeEl.value = v;
+      scheduleGridUpdate();
+    });
+  }
+  linkRangeAndNumber(el.cfgSize, el.cfgSizeNum);
+  linkRangeAndNumber(el.cfgGap, el.cfgGapNum);
+
+  [el.cfgCols, el.cfgAlign].forEach(input => {
+    input.addEventListener('input', scheduleGridUpdate);
+  });
+
+  // ---------- canvas (arrangement) rendering ----------
+  function renderCanvas(){
+    el.canvas.innerHTML = '';
+    el.canvasWrap.classList.toggle('empty', arrangement.length === 0);
+    el.canvasCount.textContent = arrangement.length + ' placed';
+
+    arrangement.forEach((id, index) => {
+      const icon = icons.get(id);
+      if (!icon) return;
+      const tile = document.createElement('div');
+      tile.className = 'canvas-tile';
+      tile.dataset.id = id;
+      tile.dataset.index = index;
+      tile.title = icon.name;
+
+      const img = document.createElement('img');
+      img.src = getIconUrl(icon);
+      img.alt = icon.name;
+      img.draggable = false;
+      tile.appendChild(img);
+
+      const del = document.createElement('div');
+      del.className = 'del';
+      del.textContent = '×';
+      del.title = 'Remove from grid';
+      del.addEventListener('click', (e) => {
+        e.stopPropagation();
+        arrangement.splice(index, 1);
+        renderCanvas();
+      });
+      tile.appendChild(del);
+
+      attachDragSource(tile, () => ({ source: 'canvas', id, index: parseInt(tile.dataset.index, 10) }));
+
+      el.canvas.appendChild(tile);
+    });
+
+    applyGridSettings();
+    updateCodeOutput();
+  }
+
+  // allow dropping directly on empty grid background via the same pointer system:
+  // handled already because #canvas-wrap is hit-tested in finishGlobalDrag as a fallback target.
+
+  el.btnClearCanvas.addEventListener('click', () => { arrangement = []; renderCanvas(); });
+
+  // ---------- code generation ----------
+  function buildSnippet(){
+    if (arrangement.length === 0) return '';
+    const cols = Math.max(1, parseInt(el.cfgCols.value || '1', 10));
+    const size = parseInt(el.cfgSize.value, 10);
+    const align = el.cfgAlign.value;
+    const alignAttr = align === 'start' ? 'left' : align === 'end' ? 'right' : 'center';
+
+    const lines = [`<div align="${alignAttr}">`];
+    for (let i = 0; i < arrangement.length; i += cols){
+      const rowIds = arrangement.slice(i, i + cols);
+      const imgs = rowIds.map(id => {
+        const icon = icons.get(id);
+        return `  <img src="icons/${icon.name}.svg" width="${size}" height="${size}" alt="${icon.name}" />`;
+      });
+      lines.push(imgs.join('\n'));
+      if (i + cols < arrangement.length) lines.push('  <br/>');
+    }
+    lines.push('</div>');
+    return lines.join('\n');
+  }
+
+  function updateCodeOutput(){ el.codeOutput.value = buildSnippet(); }
+
+  el.btnCopy.addEventListener('click', async () => {
+    const text = el.codeOutput.value;
+    if (!text) return;
+    try { await navigator.clipboard.writeText(text); }
+    catch(err){ el.codeOutput.select(); document.execCommand('copy'); }
+    const original = el.btnCopy.textContent;
+    el.btnCopy.textContent = 'Copied ✓';
+    setTimeout(() => { el.btnCopy.textContent = original; }, 1400);
+  });
+
+  // ---------- zip export ----------
+  el.btnDownload.addEventListener('click', async () => {
+    if (arrangement.length === 0) return;
+    el.btnDownload.disabled = true;
+    const original = el.btnDownload.textContent;
+    el.btnDownload.textContent = 'Building zip…';
+    try {
+      const zip = new JSZip();
+      const iconsFolder = zip.folder('icons');
+      const usedIds = Array.from(new Set(arrangement));
+      usedIds.forEach(id => {
+        const icon = icons.get(id);
+        if (icon) iconsFolder.file(`${icon.name}.svg`, icon.svgText);
+      });
+
+      const snippet = buildSnippet();
+      const readmeNote =
+`# Skill icons — profile README snippet
 
 1. Copy the \`icons/\` folder from this zip into your GitHub profile repo
    (the repo named exactly like your username, e.g. \`octocat/octocat\`),
@@ -1406,32 +974,32 @@
 \`\`\`html
 ${snippet}
 \`\`\`
-`
-            zip.file("profile-readme-snippet.md", readmeNote)
+`;
+      zip.file('profile-readme-snippet.md', readmeNote);
 
-            const blob = await zip.generateAsync({ type: "blob" })
-            const url = URL.createObjectURL(blob)
-            const a = document.createElement("a")
-            a.href = url
-            a.download = "skill-icons.zip"
-            document.body.appendChild(a)
-            a.click()
-            a.remove()
-            setTimeout(() => URL.revokeObjectURL(url), 4000)
-          } catch (err) {
-            console.error(err)
-            alert("Could not build the zip: " + err.message)
-          } finally {
-            el.btnDownload.disabled = false
-            el.btnDownload.textContent = original
-          }
-        })
+      const blob = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'skill-icons.zip';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+    } catch(err){
+      console.error(err);
+      alert('Could not build the zip: ' + err.message);
+    } finally {
+      el.btnDownload.disabled = false;
+      el.btnDownload.textContent = original;
+    }
+  });
 
-        // ---------- init ----------
-        recomputeFilter()
-        renderPaletteVirtual(true)
-        renderCanvas()
-      })()
-    </script>
-  </body>
+  // ---------- init ----------
+  recomputeFilter();
+  renderPaletteVirtual(true);
+  renderCanvas();
+})();
+</script>
+</body>
 </html>
