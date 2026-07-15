@@ -1,0 +1,1579 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>copyparty config builder</title>
+    <style>
+      :root {
+        --bg: #0e1116;
+        --panel: #161b24;
+        --panel-2: #1d2330;
+        --line: #2a3142;
+        --text: #e7ebf3;
+        --muted: #8b93a7;
+        --amber: #e8a33d;
+        --amber-dim: #7a5b28;
+        --teal: #4fd1c5;
+        --red: #e2645a;
+        --mono: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, Consolas, monospace;
+        --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sans);
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      header {
+        padding: 18px 28px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+        justify-content: space-between;
+      }
+      header .titles {
+        display: flex;
+        align-items: baseline;
+        gap: 14px;
+        flex-wrap: wrap;
+      }
+      header h1 {
+        font-family: var(--mono);
+        font-size: 17px;
+        margin: 0;
+        color: var(--amber);
+        letter-spacing: 0.02em;
+      }
+      header .tag {
+        color: var(--muted);
+        font-size: 12.5px;
+      }
+      .hdr-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .wrap {
+        display: grid;
+        grid-template-columns: 1fr 460px;
+        gap: 0;
+        min-height: calc(100vh - 66px);
+      }
+      @media (max-width: 980px) {
+        .wrap {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .editor {
+        padding: 24px 28px;
+        overflow-y: auto;
+      }
+      .output {
+        background: #0a0d12;
+        border-left: 1px solid var(--line);
+        padding: 24px 24px;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow-y: auto;
+      }
+      @media (max-width: 980px) {
+        .output {
+          position: static;
+          height: auto;
+          border-left: none;
+          border-top: 1px solid var(--line);
+        }
+      }
+
+      section.block {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 18px 20px;
+        margin-bottom: 18px;
+      }
+      section.block > h2 {
+        margin: 0 0 4px;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--teal);
+        font-family: var(--mono);
+      }
+      section.block > p.hint {
+        margin: 2px 0 14px;
+        color: var(--muted);
+        font-size: 12.5px;
+      }
+      h3.sub {
+        font-size: 11.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+        margin: 16px 0 8px;
+      }
+
+      .row {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .row input[type="text"],
+      .row input[type="password"],
+      .row input[type="number"] {
+        flex: 1 1 110px;
+        min-width: 0;
+      }
+      input[type="text"],
+      input[type="password"],
+      input[type="number"],
+      select,
+      textarea {
+        background: var(--panel-2);
+        border: 1px solid var(--line);
+        color: var(--text);
+        border-radius: 6px;
+        padding: 8px 10px;
+        font-family: var(--sans);
+        font-size: 13.5px;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+      }
+      textarea {
+        width: 100%;
+        font-family: var(--mono);
+        resize: vertical;
+      }
+      input:focus,
+      select:focus,
+      textarea:focus,
+      button:focus-visible {
+        outline: 2px solid var(--teal);
+        outline-offset: 1px;
+      }
+      input:disabled {
+        opacity: 0.4;
+      }
+      label.small {
+        font-size: 12px;
+        color: var(--muted);
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      button {
+        background: var(--panel-2);
+        color: var(--text);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 7px 12px;
+        font-size: 13px;
+        cursor: pointer;
+        font-family: var(--sans);
+      }
+      button:hover {
+        border-color: var(--teal);
+      }
+      button.primary {
+        background: var(--amber-dim);
+        border-color: var(--amber);
+        color: #fff3e0;
+      }
+      button.primary:hover {
+        background: var(--amber);
+        color: #241a05;
+      }
+      button.ghost {
+        background: transparent;
+        border-color: transparent;
+        color: var(--muted);
+        padding: 6px 8px;
+      }
+      button.ghost:hover {
+        color: var(--red);
+        border-color: transparent;
+      }
+      button.tiny {
+        padding: 4px 8px;
+        font-size: 12px;
+      }
+
+      .entity {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 12px 14px;
+        margin-bottom: 10px;
+        background: var(--panel-2);
+      }
+      .entity-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+      .entity-head .name-wrap {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        flex: 1;
+      }
+      .rename-input {
+        font-family: var(--mono);
+        font-size: 13.5px;
+        background: transparent !important;
+        border: 1px solid transparent !important;
+        padding: 4px 6px !important;
+        border-radius: 5px;
+        flex: 1;
+        color: var(--text);
+      }
+      .rename-input:hover {
+        border-color: var(--line) !important;
+      }
+      .rename-input:focus {
+        border-color: var(--teal) !important;
+        background: var(--panel) !important;
+      }
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 8px;
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #232a3a;
+        border: 1px solid var(--line);
+        color: var(--muted);
+        border-radius: 999px;
+        padding: 3px 6px 3px 10px;
+        font-size: 12.5px;
+        cursor: pointer;
+      }
+      .chip.chip-on {
+        border-color: var(--teal);
+        color: var(--teal);
+      }
+      .member-search {
+        width: 100%;
+        margin-top: 4px;
+      }
+
+      .perm-row {
+        display: grid;
+        grid-template-columns: 1.2fr 2.4fr auto;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 6px;
+      }
+      .perm-letters {
+        display: flex;
+        gap: 4px;
+        flex-wrap: wrap;
+      }
+      .perm-letters label {
+        font-family: var(--mono);
+        font-size: 11.5px;
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 5px;
+        padding: 3px 6px;
+        cursor: pointer;
+      }
+      .perm-letters input {
+        margin: 0;
+      }
+      .perm-letters label.on {
+        border-color: var(--teal);
+        color: var(--teal);
+      }
+
+      .flagrow {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 6px;
+      }
+      .flagrow label {
+        font-size: 12.5px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        color: var(--muted);
+        cursor: pointer;
+      }
+      .flagrow label.on {
+        color: var(--text);
+      }
+
+      .proto-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        padding: 8px 0;
+        border-bottom: 1px solid #1f2531;
+      }
+      .proto-row:last-child {
+        border-bottom: none;
+      }
+      .proto-row > label:first-child {
+        min-width: 70px;
+        font-family: var(--mono);
+        font-size: 12.5px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--muted);
+        cursor: pointer;
+      }
+      .proto-row > label:first-child.on {
+        color: var(--text);
+      }
+      .proto-row input[type="number"] {
+        width: 90px;
+      }
+      .inline-check {
+        font-size: 12px;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        cursor: pointer;
+      }
+      .inline-check.on {
+        color: var(--text);
+      }
+      .proto-note {
+        font-size: 11.5px;
+        color: var(--muted);
+        font-style: italic;
+      }
+
+      .placeholder-note {
+        font-size: 12px;
+        color: var(--muted);
+        background: #141a26;
+        border: 1px dashed var(--line);
+        border-radius: 6px;
+        padding: 8px 10px;
+        margin-top: 8px;
+      }
+      .placeholder-note code {
+        color: var(--amber);
+      }
+
+      code,
+      .mono {
+        font-family: var(--mono);
+      }
+
+      .output h2 {
+        font-family: var(--mono);
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--teal);
+        margin: 0 0 10px;
+      }
+      pre#out {
+        background: #080a0e;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 16px;
+        font-family: var(--mono);
+        font-size: 12.5px;
+        line-height: 1.55;
+        white-space: pre-wrap;
+        word-break: break-word;
+        color: #d7f5ef;
+        min-height: 200px;
+      }
+      .out-actions {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      .empty-row {
+        color: var(--muted);
+        font-size: 12.5px;
+        padding: 6px 0;
+      }
+      .field-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .field-grid > div {
+        display: flex;
+        flex-direction: column;
+      }
+
+      html,
+      body {
+        overflow-x: hidden;
+      }
+
+      @media (max-width: 640px) {
+        header {
+          padding: 14px 16px;
+          flex-direction: column;
+          align-items: stretch;
+        }
+        header .titles {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 4px;
+        }
+        .editor {
+          padding: 16px;
+        }
+        .output {
+          padding: 16px;
+        }
+        section.block {
+          padding: 14px 14px;
+        }
+
+        .field-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .row {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .row input[type="text"],
+        .row input[type="password"],
+        .row input[type="number"] {
+          flex: none;
+          width: 100%;
+        }
+        .row button {
+          width: 100%;
+        }
+
+        .perm-row {
+          grid-template-columns: 1fr;
+          row-gap: 8px;
+        }
+        .perm-row select {
+          width: 100%;
+        }
+        .perm-row button.ghost.tiny {
+          justify-self: start;
+        }
+
+        .proto-row {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 6px;
+        }
+        .proto-row input[type="number"] {
+          width: 100%;
+        }
+        .proto-row > label:first-child {
+          min-width: 0;
+        }
+
+        .entity-head {
+          flex-wrap: wrap;
+        }
+        .out-actions {
+          flex-wrap: wrap;
+        }
+        .out-actions button {
+          flex: 1 1 auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="titles">
+        <h1>&gt;_ configparty</h1>
+        <span class="tag"><code>copyparty config tool</code></span>
+      </div>
+      <div class="hdr-actions">
+        <input type="file" id="load-file" accept=".conf,.txt" style="display: none" onchange="handleLoadConfig(this)" />
+        <input type="file" id="import-json-file" accept=".json,application/json" style="display: none" onchange="handleImportJSON(this)" />
+        <button onclick="exportJSON()">Export JSON</button>
+        <button onclick="document.getElementById('import-json-file').click()">Import JSON</button>
+        <button onclick="document.getElementById('load-file').click()">Load .conf file&hellip;</button>
+      </div>
+    </header>
+
+    <div class="wrap">
+      <div class="editor">
+        <!-- GLOBAL -->
+        <section class="block">
+          <h2>Global</h2>
+          <div id="global-body"></div>
+        </section>
+
+        <!-- USERS -->
+        <section class="block">
+          <h2>Users</h2>
+          <div id="user-list"></div>
+          <div class="row">
+            <input type="text" id="new-username" placeholder="username" />
+            <input type="text" id="new-password" placeholder="password" />
+            <button class="primary" onclick="addUser()">+ Add user</button>
+          </div>
+        </section>
+
+        <!-- GROUPS -->
+        <section class="block">
+          <h2>Groups</h2>
+          <div id="group-list"></div>
+          <div class="row">
+            <input type="text" id="new-groupname" placeholder="group name" />
+            <button class="primary" onclick="addGroup()">+ Add group</button>
+          </div>
+        </section>
+
+        <!-- VOLUMES -->
+        <section class="block">
+          <h2>Volumes</h2>
+          <p class="hint">Each volume maps a URL path to a real folder, with per-user/group permissions.</p>
+          <div class="placeholder-note">
+            Type <code>{username}</code> anywhere in the URL path or real path to make a <strong>per-user volume</strong> - e.g. URL path
+            <code>/users/{username}</code>.
+          </div>
+          <div id="volume-list" style="margin-top: 14px"></div>
+          <button class="primary" onclick="addVolume()">+ Add volume</button>
+        </section>
+      </div>
+
+      <div class="output">
+        <h2>copyparty.conf</h2>
+        <div class="out-actions">
+          <button onclick="copyOut()">Copy</button>
+          <button onclick="downloadOut()">Download .conf</button>
+        </div>
+        <pre id="out"></pre>
+      </div>
+    </div>
+
+    <script>
+      let state = {
+        global: {
+          name: "",
+          port: "3923",
+          flags: { e2dsa: true, e2ts: false, z: false, qr: false, usernames: false },
+          extra: "",
+          ftp: { enabled: false, port: "3921" },
+          ftps: { enabled: false, port: "3990" },
+          sftp: { enabled: false, port: "3922", pw: false },
+          smb: { enabled: false, port: "445", write: false },
+          webdav: { disabled: false, authRequired: false },
+          shares: { enabled: false, path: "/s", adminOnly: false, admins: [], search: "" },
+        },
+        users: [],
+        groups: [],
+        volumes: [],
+        _id: 1,
+      }
+
+      function uid() {
+        return state._id++
+      }
+      function esc(s) {
+        return String(s ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c])
+      }
+      function escAttr(s) {
+        return esc(s).replace(/"/g, "&quot;")
+      }
+
+      // ---------- GLOBAL ----------
+      function updateGlobalField(field, value) {
+        state.global[field] = value
+        renderAll()
+      }
+      function toggleGlobalFlag(flag) {
+        state.global.flags[flag] = !state.global.flags[flag]
+        renderAll()
+      }
+      function updateProtocol(proto, field, value) {
+        state.global[proto][field] = value
+        renderAll()
+      }
+      function toggleWebdav(field, value) {
+        state.global.webdav[field] = value
+        renderAll()
+      }
+      function updateShares(field, value) {
+        state.global.shares[field] = value
+        renderAll()
+      }
+
+      function renderGlobal() {
+        const g = state.global
+        const el = document.getElementById("global-body")
+        el.innerHTML = `
+    <div class="field-grid">
+      <div>
+        <label class="small">Server name</label>
+        <input type="text" value="${escAttr(g.name)}" placeholder="configparty" onchange="updateGlobalField('name',this.value)">
+      </div>
+      <div>
+        <label class="small">HTTP port(s)</label>
+        <input type="text" value="${escAttr(g.port)}" placeholder="3923" onchange="updateGlobalField('port',this.value)">
+      </div>
+    </div>
+
+    <div class="flagrow" style="margin-top:14px;">
+      <label class="${g.flags.usernames ? "on" : ""}">
+        <input type="checkbox" ${g.flags.usernames ? "checked" : ""} onchange="toggleGlobalFlag('usernames')">
+        Require username at login <span style="color:var(--muted)">Lets multiple accounts share the same password</span>
+      </label>
+    </div>
+    <div class="flagrow" style="margin-top:8px;">
+      <label class="${g.flags.e2dsa ? "on" : ""}"><input type="checkbox" ${g.flags.e2dsa ? "checked" : ""} onchange="toggleGlobalFlag('e2dsa')"> e2dsa <span style="color:var(--muted)">(file index + search)</span></label>
+      <label class="${g.flags.e2ts ? "on" : ""}"><input type="checkbox" ${g.flags.e2ts ? "checked" : ""} onchange="toggleGlobalFlag('e2ts')"> e2ts <span style="color:var(--muted)">(media metadata index)</span></label>
+      <label class="${g.flags.z ? "on" : ""}"><input type="checkbox" ${g.flags.z ? "checked" : ""} onchange="toggleGlobalFlag('z')"> z <span style="color:var(--muted)">(zeroconf / mDNS)</span></label>
+      <label class="${g.flags.qr ? "on" : ""}"><input type="checkbox" ${g.flags.qr ? "checked" : ""} onchange="toggleGlobalFlag('qr')"> qr <span style="color:var(--muted)">(QR code login)</span></label>
+    </div>
+
+    <h3 class="sub">Protocols</h3>
+
+    <div class="proto-row">
+      <label class="${g.ftp.enabled ? "on" : ""}"><input type="checkbox" ${g.ftp.enabled ? "checked" : ""} onchange="updateProtocol('ftp','enabled',this.checked)"> FTP</label>
+      <input type="number" value="${escAttr(g.ftp.port)}" ${g.ftp.enabled ? "" : "disabled"} onchange="updateProtocol('ftp','port',this.value)">
+      <span class="proto-note">Default 3921</span>
+    </div>
+
+    <div class="proto-row">
+      <label class="${g.ftps.enabled ? "on" : ""}"><input type="checkbox" ${g.ftps.enabled ? "checked" : ""} onchange="updateProtocol('ftps','enabled',this.checked)"> FTPS</label>
+      <input type="number" value="${escAttr(g.ftps.port)}" ${g.ftps.enabled ? "" : "disabled"} onchange="updateProtocol('ftps','port',this.value)">
+      <span class="proto-note">Needs a TLS cert (--cert) configured separately</span>
+    </div>
+
+    <div class="proto-row">
+      <label class="${g.sftp.enabled ? "on" : ""}"><input type="checkbox" ${g.sftp.enabled ? "checked" : ""} onchange="updateProtocol('sftp','enabled',this.checked)"> SFTP</label>
+      <input type="number" value="${escAttr(g.sftp.port)}" ${g.sftp.enabled ? "" : "disabled"} onchange="updateProtocol('sftp','port',this.value)">
+      <label class="inline-check ${g.sftp.pw ? "on" : ""}">
+        <input type="checkbox" ${g.sftp.pw ? "checked" : ""} ${g.sftp.enabled ? "" : "disabled"} onchange="updateProtocol('sftp','pw',this.checked)">
+        Allow password login <span class="proto-note">(default is SSH keys only)</span>
+      </label>
+    </div>
+
+    <div class="proto-row">
+      <label class="${g.smb.enabled ? "on" : ""}"><input type="checkbox" ${g.smb.enabled ? "checked" : ""} onchange="updateProtocol('smb','enabled',this.checked)"> SMB</label>
+      <input type="number" value="${escAttr(g.smb.port)}" ${g.smb.enabled ? "" : "disabled"} onchange="updateProtocol('smb','port',this.value)">
+      <label class="inline-check ${g.smb.write ? "on" : ""}">
+        <input type="checkbox" ${g.smb.write ? "checked" : ""} ${g.smb.enabled ? "" : "disabled"} onchange="updateProtocol('smb','write',this.checked)">
+        Allow write (--smbw) <span class="proto-note">read-only otherwise; LAN use only</span>
+      </label>
+    </div>
+
+    <div class="proto-row">
+      <label class="${!g.webdav.disabled ? "on" : ""}">WebDAV</label>
+      <span class="proto-note">Always available over http(s) unless disabled below</span>
+      <label class="inline-check ${g.webdav.disabled ? "on" : ""}">
+        <input type="checkbox" ${g.webdav.disabled ? "checked" : ""} onchange="toggleWebdav('disabled',this.checked)"> disable
+      </label>
+      <label class="inline-check ${g.webdav.authRequired ? "on" : ""}">
+        <input type="checkbox" ${g.webdav.authRequired ? "checked" : ""} onchange="toggleWebdav('authRequired',this.checked)"> Require login (--dav-auth)
+      </label>
+    </div>
+
+    <h3 class="sub">Sharing</h3>
+    <div class="flagrow">
+      <label class="${g.shares.enabled ? "on" : ""}">
+        <input type="checkbox" ${g.shares.enabled ? "checked" : ""} onchange="updateShares('enabled',this.checked)">
+        Enable temporary share links (--shr)
+        <span style="color:var(--muted)">Lets any account with read access generate a link to share</span>
+      </label>
+    </div>
+    <div class="row" style="margin-top:8px;">
+      <label class="small" style="min-width:120px;">share URL prefix</label>
+      <input type="text" style="max-width:140px;" value="${escAttr(g.shares.path)}" placeholder="/s" ${g.shares.enabled ? "" : "disabled"}
+             onchange="updateShares('path', this.value)">
+    </div>
+    <div class="flagrow" style="margin-top:6px;">
+      <label class="inline-check ${g.shares.adminOnly ? "on" : ""}">
+        <input type="checkbox" ${g.shares.adminOnly ? "checked" : ""} ${g.shares.enabled ? "" : "disabled"} onchange="updateShares('adminOnly',this.checked)">
+        Only volume admins may create shares (--shr-who a)
+      </label>
+    </div>
+    <div class="row" style="margin-top:6px; align-items:flex-start;">
+      <label class="small" style="min-width:120px;">Users who can manage <em>all</em> shares (--shr-adm)</label>
+      <div style="flex:1;">
+        ${
+          state.users.length
+            ? `<input type="text" class="member-search" placeholder="search users&hellip;" value="${escAttr(g.shares.search || "")}" ${g.shares.enabled ? "" : "disabled"}
+                      oninput="updateShareAdminSearch(this.value)">
+               <div class="chips" id="chips-shareadmins">${state.users
+                 .map(
+                   (u) => `
+                <span class="chip ${g.shares.admins.includes(u.username) ? "chip-on" : ""}" data-uname="${escAttr(u.username.toLowerCase())}" onclick="${g.shares.enabled ? `toggleShareAdmin('${escAttr(u.username)}')` : ""}">
+                  ${g.shares.admins.includes(u.username) ? "✓ " : ""}${esc(u.username)}
+                </span>`,
+                 )
+                 .join("")}</div>
+               ${
+                 state.groups.length
+                   ? `
+               <div class="row" style="margin-top:8px;">
+                 <select id="shareadmin-group-pick" ${g.shares.enabled ? "" : "disabled"} style="max-width:180px;">
+                   ${state.groups.map((gr) => `<option value="${escAttr(gr.name)}">@${esc(gr.name)}</option>`).join("")}
+                 </select>
+                 <button class="tiny" ${g.shares.enabled ? "" : "disabled"} onclick="addGroupToShareAdmins(document.getElementById('shareadmin-group-pick').value)">+ add all members</button>
+               </div>
+               `
+                   : ""
+               }`
+            : '<div class="empty-row">Add users first.</div>'
+        }
+      </div>
+    </div>
+    <label class="small" style="margin-top:14px;">Extra global lines (one per line)</label>
+    <textarea rows="7" placeholder="e.g. rproxy: 1&#10;chpw" onchange="updateGlobalField('extra',this.value)">${esc(g.extra)}</textarea>
+  `
+        filterChipContainer("chips-shareadmins", g.shares.search || "")
+      }
+
+      // ---------- USERS ----------
+      function addUser() {
+        const u = document.getElementById("new-username")
+        const p = document.getElementById("new-password")
+        const username = u.value.trim()
+        if (!username) return
+        if (state.users.some((x) => x.username === username)) {
+          alert("That username already exists.")
+          return
+        }
+        state.users.push({ id: uid(), username, password: p.value.trim() || "changeme" })
+        u.value = ""
+        p.value = ""
+        renderAll()
+      }
+      function removeUser(id) {
+        const removed = state.users.find((x) => x.id === id)
+        state.users = state.users.filter((x) => x.id !== id)
+        state.groups.forEach((g) => (g.members = g.members.filter((m) => m !== (removed && removed.username))))
+        state.volumes.forEach((v) => (v.rules = v.rules.filter((r) => r.subject !== (removed && removed.username))))
+        renderAll()
+      }
+      function updateUser(id, field, value) {
+        const u = state.users.find((x) => x.id === id)
+        if (u) {
+          u[field] = value
+          renderAll()
+        }
+      }
+      function renameUser(id, newName) {
+        newName = newName.trim()
+        const u = state.users.find((x) => x.id === id)
+        if (!u) return
+        if (!newName || newName === u.username) {
+          renderAll()
+          return
+        }
+        if (state.users.some((x) => x.id !== id && x.username === newName)) {
+          alert("Another user already has that username.")
+          renderAll()
+          return
+        }
+        const old = u.username
+        u.username = newName
+        state.groups.forEach((g) => {
+          g.members = g.members.map((m) => (m === old ? newName : m))
+        })
+        state.volumes.forEach((v) => {
+          v.rules.forEach((r) => {
+            if (r.subject === old) r.subject = newName
+          })
+        })
+        renderAll()
+      }
+      function renderUsers() {
+        const el = document.getElementById("user-list")
+        if (!state.users.length) {
+          el.innerHTML = '<div class="empty-row">No users yet.</div>'
+          return
+        }
+        el.innerHTML = state.users
+          .map(
+            (u) => `
+    <div class="entity">
+      <div class="entity-head">
+        <div class="name-wrap">
+          <input type="text" class="rename-input" value="${escAttr(u.username)}" onchange="renameUser(${u.id}, this.value)">
+        </div>
+        <button class="ghost" onclick="removeUser(${u.id})" title="Remove user">✕</button>
+      </div>
+      <div class="row">
+        <label class="small" style="min-width:70px;">password</label>
+        <input type="text" value="${escAttr(u.password)}" onchange="updateUser(${u.id},'password',this.value)">
+      </div>
+    </div>
+  `,
+          )
+          .join("")
+      }
+
+      // ---------- GROUPS ----------
+      function addGroup() {
+        const n = document.getElementById("new-groupname")
+        const name = n.value.trim()
+        if (!name) return
+        if (state.groups.some((x) => x.name === name)) {
+          alert("That group already exists.")
+          return
+        }
+        state.groups.push({ id: uid(), name, members: [], search: "" })
+        n.value = ""
+        renderAll()
+      }
+      function removeGroup(id) {
+        const g = state.groups.find((x) => x.id === id)
+        state.groups = state.groups.filter((x) => x.id !== id)
+        state.volumes.forEach((v) => (v.rules = v.rules.filter((r) => r.subject !== "@" + (g && g.name))))
+        renderAll()
+      }
+      function renameGroup(id, newName) {
+        newName = newName.trim()
+        const g = state.groups.find((x) => x.id === id)
+        if (!g) return
+        if (!newName || newName === g.name) {
+          renderAll()
+          return
+        }
+        if (state.groups.some((x) => x.id !== id && x.name === newName)) {
+          alert("Another group already has that name.")
+          renderAll()
+          return
+        }
+        const old = g.name
+        g.name = newName
+        state.volumes.forEach((v) => {
+          v.rules.forEach((r) => {
+            if (r.subject === "@" + old) r.subject = "@" + newName
+          })
+        })
+        renderAll()
+      }
+      function toggleMember(gid, username) {
+        const g = state.groups.find((x) => x.id === gid)
+        if (!g) return
+        if (g.members.includes(username)) g.members = g.members.filter((m) => m !== username)
+        else g.members.push(username)
+        renderAll()
+      }
+      function updateGroupSearch(gid, value) {
+        const g = state.groups.find((x) => x.id === gid)
+        if (g) g.search = value
+        filterChipContainer("chips-" + gid, value)
+      }
+      function filterChipContainer(containerId, query) {
+        const container = document.getElementById(containerId)
+        if (!container) return
+        const q = (query || "").trim().toLowerCase()
+        Array.from(container.children).forEach((chip) => {
+          const name = chip.dataset.uname || ""
+          chip.style.display = name.includes(q) ? "" : "none"
+        })
+      }
+      function toggleShareAdmin(username) {
+        const list = state.global.shares.admins
+        state.global.shares.admins = list.includes(username) ? list.filter((m) => m !== username) : [...list, username]
+        renderAll()
+      }
+      function addGroupToShareAdmins(groupName) {
+        const g = state.groups.find((x) => x.name === groupName)
+        if (!g) return
+        const set = new Set(state.global.shares.admins)
+        g.members.forEach((m) => set.add(m))
+        state.global.shares.admins = [...set]
+        renderAll()
+      }
+      function updateShareAdminSearch(value) {
+        state.global.shares.search = value
+        filterChipContainer("chips-shareadmins", value)
+      }
+      function renderGroups() {
+        const el = document.getElementById("group-list")
+        if (!state.groups.length) {
+          el.innerHTML = '<div class="empty-row">No groups yet.</div>'
+          return
+        }
+        el.innerHTML = state.groups
+          .map(
+            (g) => `
+    <div class="entity">
+      <div class="entity-head">
+        <div class="name-wrap">
+          <span style="color:var(--muted)">@</span>
+          <input type="text" class="rename-input" value="${escAttr(g.name)}" onchange="renameGroup(${g.id}, this.value)">
+        </div>
+        <button class="ghost" onclick="removeGroup(${g.id})" title="Remove group">✕</button>
+      </div>
+      <label class="small">members</label>
+      ${
+        state.users.length
+          ? `<input type="text" class="member-search" placeholder="search users&hellip;" value="${escAttr(g.search || "")}" oninput="updateGroupSearch(${g.id}, this.value)">
+             <div class="chips" id="chips-${g.id}">${state.users
+               .map(
+                 (u) => `
+              <span class="chip ${g.members.includes(u.username) ? "chip-on" : ""}" data-uname="${escAttr(u.username.toLowerCase())}" onclick="toggleMember(${g.id}, '${escAttr(u.username)}')">
+                ${g.members.includes(u.username) ? "✓ " : ""}${esc(u.username)}
+              </span>`,
+               )
+               .join("")}</div>`
+          : '<div class="empty-row">Add users first.</div>'
+      }
+    </div>
+  `,
+          )
+          .join("")
+        state.groups.forEach((g) => filterChipContainer("chips-" + g.id, g.search || ""))
+      }
+
+      // ---------- VOLUMES ----------
+      const PERM_LETTERS = [
+        { k: "r", label: "Read", title: "read / list / download" },
+        { k: "w", label: "Write", title: "upload" },
+        { k: "m", label: "Move", title: "move / rename" },
+        { k: "d", label: "Delete", title: "delete" },
+        { k: "g", label: "Get", title: "get-only (download without listing)" },
+        { k: "A", label: "Admin", title: "full access (read+write+move+delete+admin)" },
+      ]
+      const VOL_FLAGS = [
+        { k: "e2d", title: "enable per-volume database (upload log, etc)" },
+        { k: "e2ds", title: "scan filesystem into database on startup" },
+        { k: "e2dsa", title: "scan + persistent search index for this volume" },
+        { k: "e2t", title: "enable media-tag database" },
+        { k: "e2ts", title: "scan media tags on startup" },
+        { k: "dedup", title: "content-based dedup: identical uploads are hardlinked instead of duplicated" },
+      ]
+
+      function addVolume() {
+        state.volumes.push({
+          id: uid(),
+          vpath: "",
+          realpath: "",
+          rules: [{ id: uid(), subject: "*", letters: "r" }],
+          flags: { e2d: false, e2ds: false, e2dsa: false, e2t: false, e2ts: false, dedup: false },
+          extraFlags: "",
+        })
+        renderAll()
+      }
+      function removeVolume(id) {
+        state.volumes = state.volumes.filter((v) => v.id !== id)
+        renderAll()
+      }
+      function updateVolume(id, field, value) {
+        const v = state.volumes.find((x) => x.id === id)
+        if (v) {
+          v[field] = value
+          renderAll()
+        }
+      }
+      function addRule(vid) {
+        const v = state.volumes.find((x) => x.id === vid)
+        if (!v) return
+        v.rules.push({ id: uid(), subject: "*", letters: "r" })
+        renderAll()
+      }
+      function removeRule(vid, rid) {
+        const v = state.volumes.find((x) => x.id === vid)
+        if (!v) return
+        v.rules = v.rules.filter((r) => r.id !== rid)
+        renderAll()
+      }
+      function updateRule(vid, rid, field, value) {
+        const v = state.volumes.find((x) => x.id === vid)
+        if (!v) return
+        const r = v.rules.find((x) => x.id === rid)
+        if (!r) return
+        r[field] = value
+        renderAll()
+      }
+      function toggleRuleLetter(vid, rid, letter) {
+        const v = state.volumes.find((x) => x.id === vid)
+        const r = v && v.rules.find((x) => x.id === rid)
+        if (!r) return
+        if (letter === "A") {
+          r.letters = r.letters === "A" ? "r" : "A"
+        } else {
+          let set = new Set((r.letters === "A" ? "" : r.letters).split("").filter(Boolean))
+          if (set.has(letter)) set.delete(letter)
+          else set.add(letter)
+          r.letters = [...set].join("") || "r"
+        }
+        renderAll()
+      }
+      function toggleVolFlag(vid, flag) {
+        const v = state.volumes.find((x) => x.id === vid)
+        if (!v) return
+        v.flags[flag] = !v.flags[flag]
+        renderAll()
+      }
+
+      function subjectRank(subject) {
+        if (subject === "{username}") return 0
+        if (subject && subject.startsWith("@")) return 1
+        if (subject === "*") return 2
+        return 3 // individual user
+      }
+
+      function subjectOptions(current, vol) {
+        const opts = []
+        const hasPlaceholder = vol && ((vol.vpath || "") + (vol.realpath || "")).includes("{username}")
+        if (hasPlaceholder) {
+          opts.push(`<option value="{username}" ${current === "{username}" ? "selected" : ""}>{username}</option>`)
+        }
+        state.groups.forEach((g) => opts.push(`<option value="@${escAttr(g.name)}" ${current === "@" + g.name ? "selected" : ""}>@${esc(g.name)}</option>`))
+        opts.push(`<option value="*" ${current === "*" ? "selected" : ""}>Everyone</option>`)
+        state.users.forEach((u) => opts.push(`<option value="${escAttr(u.username)}" ${current === u.username ? "selected" : ""}>${esc(u.username)}</option>`))
+        return opts.join("")
+      }
+
+      function renderVolumes() {
+        const el = document.getElementById("volume-list")
+        if (!state.volumes.length) {
+          el.innerHTML = '<div class="empty-row">No volumes yet.</div>'
+          return
+        }
+        el.innerHTML = state.volumes
+          .map((v) => {
+            const usesPlaceholder = ((v.vpath || "") + (v.realpath || "")).includes("{username}")
+            return `
+    <div class="entity">
+      <div class="entity-head">
+        <strong style="font-family:var(--mono);font-size:13.5px;">${esc(v.vpath || "/(unset)")}</strong>
+        <button class="ghost" onclick="removeVolume(${v.id})" title="Remove volume">✕</button>
+      </div>
+      <div class="field-grid">
+        <div>
+          <label class="small">URL path (e.g. /music or /users/{username})</label>
+          <input type="text" value="${escAttr(v.vpath)}" placeholder="/music"
+                 onchange="updateVolume(${v.id},'vpath',this.value)">
+        </div>
+        <div>
+          <label class="small">Real folder path</label>
+          <input type="text" value="${escAttr(v.realpath)}" placeholder="/mnt/data/music"
+                 onchange="updateVolume(${v.id},'realpath',this.value)">
+        </div>
+      </div>
+      ${usesPlaceholder ? '<div class="placeholder-note">Per-user volume - will expand to one folder per account (<code>${u}</code>). Use the <code>{username}</code> subject below to grant owner-only access.</div>' : ""}
+
+      <div style="margin-top:12px;">
+        <label class="small">Access rules</label>
+        ${[...v.rules]
+          .sort((a, b) => subjectRank(a.subject) - subjectRank(b.subject))
+          .map(
+            (r) => `
+          <div class="perm-row">
+            <select onchange="updateRule(${v.id},${r.id},'subject',this.value)">${subjectOptions(r.subject, v)}</select>
+            <div class="perm-letters">
+              ${PERM_LETTERS.map(
+                (p) => `
+                <label class="${(r.letters === "A" ? p.k === "A" : p.k !== "A" && r.letters.includes(p.k)) ? "on" : ""}" title="${p.title}">
+                  <input type="checkbox"
+                    ${(r.letters === "A" ? p.k === "A" : p.k !== "A" && r.letters.includes(p.k)) ? "checked" : ""}
+                    onchange="toggleRuleLetter(${v.id},${r.id},'${p.k}')">${p.label}
+                </label>`,
+              ).join("")}
+            </div>
+            <button class="ghost tiny" onclick="removeRule(${v.id},${r.id})">✕</button>
+          </div>
+        `,
+          )
+          .join("")}
+        <button class="tiny" onclick="addRule(${v.id})">+ rule</button>
+      </div>
+
+      <div class="flagrow">
+        ${VOL_FLAGS.map(
+          (f) => `
+          <label class="${v.flags[f.k] ? "on" : ""}" title="${f.title}">
+            <input type="checkbox" ${v.flags[f.k] ? "checked" : ""} onchange="toggleVolFlag(${v.id},'${f.k}')">${f.k}
+          </label>`,
+        ).join("")}
+      </div>
+      <div class="row" style="margin-top:8px; align-items:flex-start;">
+        <label class="small" style="min-width:110px; margin-top:8px;">other flags</label>
+        <textarea rows="2" style="flex:1;" placeholder="e.g. fk:4&#10;noidx:\\.iso$"
+                  onchange="updateVolume(${v.id},'extraFlags',this.value)">${esc(v.extraFlags || "")}</textarea>
+      </div>
+    </div>
+  `
+          })
+          .join("")
+      }
+
+      // ---------- CONFIG GENERATION ----------
+      function expandPlaceholders(s) {
+        return (s || "").split("{username}").join("${u}").split("{group}").join("${g}")
+      }
+
+      function buildConfig() {
+        const g = state.global
+        const lines = []
+        lines.push("[global]")
+        if (g.name.trim()) lines.push(`  name: ${g.name.trim()}`)
+        if (g.port.trim()) lines.push(`  p: ${g.port.trim()}`)
+        Object.entries(g.flags).forEach(([k, v]) => {
+          if (v) lines.push(`  ${k}`)
+        })
+        if (g.ftp.enabled) lines.push(`  ftp: ${g.ftp.port}`)
+        if (g.ftps.enabled) lines.push(`  ftps: ${g.ftps.port}`)
+        if (g.sftp.enabled) {
+          lines.push(`  sftp: ${g.sftp.port}`)
+          if (g.sftp.pw) lines.push("  sftp-pw")
+        }
+        if (g.smb.enabled) {
+          lines.push("  smb")
+          if (g.smb.port && g.smb.port !== "445") lines.push(`  smb-port: ${g.smb.port}`)
+          if (g.smb.write) lines.push("  smbw")
+        }
+        if (g.webdav.disabled) lines.push("  no-dav")
+        if (g.webdav.authRequired) lines.push("  dav-auth")
+        if (g.shares.enabled) {
+          lines.push(`  shr: ${(g.shares.path || "/s").trim() || "/s"}`)
+          if (g.shares.adminOnly) lines.push("  shr-who: a")
+          if (g.shares.admins && g.shares.admins.length) lines.push(`  shr-adm: ${g.shares.admins.join(", ")}`)
+        }
+        const extra = (g.extra || "")
+          .split("\n")
+          .map((l) => l.trim())
+          .filter(Boolean)
+        extra.forEach((l) => lines.push(`  ${l}`))
+        lines.push("")
+
+        if (state.users.length) {
+          lines.push("[accounts]")
+          state.users.forEach((u) => lines.push(`  ${u.username}: ${u.password}`))
+          lines.push("")
+        }
+
+        if (state.groups.length) {
+          lines.push("[groups]")
+          state.groups.forEach((g2) => lines.push(`  ${g2.name}: ${g2.members.join(", ")}`))
+          lines.push("")
+        }
+
+        state.volumes.forEach((v) => {
+          if (!v.vpath && !v.realpath) return
+          const vpath = expandPlaceholders(v.vpath || "/")
+          const realpath = expandPlaceholders(v.realpath || ".")
+          lines.push(`[${vpath}]`)
+          lines.push(`  ${realpath}`)
+          if (v.rules.length) {
+            lines.push("  accs:")
+            const byLetters = {}
+            v.rules.forEach((r) => {
+              if (!r.subject) return
+              ;(byLetters[r.letters] = byLetters[r.letters] || []).push(expandPlaceholders(r.subject) || r.subject)
+            })
+            Object.entries(byLetters).forEach(([letters, subs]) => {
+              lines.push(`    ${letters}: ${subs.join(", ")}`)
+            })
+          }
+          const activeFlags = Object.entries(v.flags)
+            .filter(([, on]) => on)
+            .map(([f]) => f)
+          const extraFlagsArr = (v.extraFlags || "")
+            .split("\n")
+            .map((s) => s.trim())
+            .filter(Boolean)
+          const allFlags = [...activeFlags, ...extraFlagsArr]
+          if (allFlags.length) {
+            lines.push("  flags:")
+            lines.push(`    ${allFlags.join(", ")}`)
+          }
+          lines.push("")
+        })
+
+        return lines.join("\n").trim() + "\n"
+      }
+
+      // ---------- CONFIG PARSING (Load config file) ----------
+      function unexpandPlaceholders(s) {
+        return (s || "").split("${u}").join("{username}").split("${g}").join("{group}")
+      }
+
+      function parseConfig(text) {
+        const newUsers = []
+        const newGroups = []
+        const newVolumes = []
+        const newGlobal = {
+          name: "",
+          port: "",
+          flags: { e2dsa: false, e2ts: false, z: false, qr: false, usernames: false },
+          extra: "",
+          ftp: { enabled: false, port: "3921" },
+          ftps: { enabled: false, port: "3990" },
+          sftp: { enabled: false, port: "3922", pw: false },
+          smb: { enabled: false, port: "445", write: false },
+          webdav: { disabled: false, authRequired: false },
+          shares: { enabled: false, path: "/s", adminOnly: false, admins: [], search: "" },
+        }
+        const extraGlobalLines = []
+
+        let section = null
+        let curVol = null
+        let subMode = null
+
+        const lines = text.split("\n")
+        for (const raw of lines) {
+          const line = raw.replace(/\r$/, "")
+          const trimmed = line.trim()
+          if (!trimmed || trimmed.startsWith("#")) continue
+
+          const headerMatch = trimmed.match(/^\[(.+)\]$/)
+          if (headerMatch) {
+            const name = headerMatch[1].trim()
+            const lname = name.toLowerCase()
+            if (lname === "global") {
+              section = "global"
+              curVol = null
+              subMode = null
+            } else if (lname === "accounts") {
+              section = "accounts"
+              curVol = null
+              subMode = null
+            } else if (lname === "groups") {
+              section = "groups"
+              curVol = null
+              subMode = null
+            } else {
+              section = "volume"
+              curVol = {
+                id: uid(),
+                vpath: unexpandPlaceholders(name),
+                realpath: "",
+                rules: [],
+                flags: { e2d: false, e2ds: false, e2dsa: false, e2t: false, e2ts: false, dedup: false },
+                extraFlags: "",
+              }
+              newVolumes.push(curVol)
+              subMode = null
+            }
+            continue
+          }
+
+          if (section === "global") {
+            const m = trimmed.match(/^([\w-]+)\s*:\s*(.*)$/)
+            if (m) {
+              const key = m[1].toLowerCase()
+              const val = m[2].trim()
+              if (key === "name") newGlobal.name = val
+              else if (key === "p" || key === "port") newGlobal.port = val
+              else if (key === "ftp") {
+                newGlobal.ftp.enabled = true
+                newGlobal.ftp.port = val
+              } else if (key === "ftps") {
+                newGlobal.ftps.enabled = true
+                newGlobal.ftps.port = val
+              } else if (key === "sftp") {
+                newGlobal.sftp.enabled = true
+                newGlobal.sftp.port = val
+              } else if (key === "smb-port") {
+                newGlobal.smb.port = val
+              } else if (key === "shr") {
+                newGlobal.shares.enabled = true
+                newGlobal.shares.path = val
+              } else if (key === "shr-who") {
+                newGlobal.shares.enabled = true
+                if (val === "a") newGlobal.shares.adminOnly = true
+              } else if (key === "shr-adm") {
+                newGlobal.shares.enabled = true
+                newGlobal.shares.admins = val
+                  .split(",")
+                  .map((s) => s.trim())
+                  .filter(Boolean)
+              } else extraGlobalLines.push(`${key}: ${val}`)
+            } else {
+              const key = trimmed.toLowerCase()
+              if (key === "e2dsa") newGlobal.flags.e2dsa = true
+              else if (key === "e2ts") newGlobal.flags.e2ts = true
+              else if (key === "z") newGlobal.flags.z = true
+              else if (key === "qr") newGlobal.flags.qr = true
+              else if (key === "usernames") newGlobal.flags.usernames = true
+              else if (key === "sftp-pw") {
+                newGlobal.sftp.pw = true
+                newGlobal.sftp.enabled = true
+              } else if (key === "smb") {
+                newGlobal.smb.enabled = true
+              } else if (key === "smbw") {
+                newGlobal.smb.enabled = true
+                newGlobal.smb.write = true
+              } else if (key === "no-dav") newGlobal.webdav.disabled = true
+              else if (key === "dav-auth") newGlobal.webdav.authRequired = true
+              else extraGlobalLines.push(trimmed)
+            }
+          } else if (section === "accounts") {
+            const idx = trimmed.indexOf(":")
+            if (idx > -1) {
+              const username = trimmed.slice(0, idx).trim()
+              const password = trimmed.slice(idx + 1).trim()
+              if (username) newUsers.push({ id: uid(), username, password })
+            }
+          } else if (section === "groups") {
+            const idx = trimmed.indexOf(":")
+            if (idx > -1) {
+              const gname = trimmed.slice(0, idx).trim()
+              const members = trimmed
+                .slice(idx + 1)
+                .split(",")
+                .map((s) => s.trim())
+                .filter(Boolean)
+              if (gname) newGroups.push({ id: uid(), name: gname, members, search: "" })
+            }
+          } else if (section === "volume" && curVol) {
+            if (trimmed === "accs:") {
+              subMode = "accs"
+              continue
+            }
+            if (trimmed === "flags:") {
+              subMode = "flags"
+              continue
+            }
+            if (subMode === "accs") {
+              const idx = trimmed.indexOf(":")
+              if (idx > -1) {
+                const letters = trimmed.slice(0, idx).trim()
+                const subs = trimmed
+                  .slice(idx + 1)
+                  .split(",")
+                  .map((s) => s.trim())
+                  .filter(Boolean)
+                subs.forEach((s) => curVol.rules.push({ id: uid(), subject: unexpandPlaceholders(s), letters }))
+              }
+            } else if (subMode === "flags") {
+              const tokens = trimmed
+                .split(",")
+                .map((s) => s.trim())
+                .filter(Boolean)
+              tokens.forEach((t) => {
+                if (["e2d", "e2ds", "e2dsa", "e2t", "e2ts", "dedup"].includes(t)) curVol.flags[t] = true
+                else curVol.extraFlags = (curVol.extraFlags ? curVol.extraFlags + "\n" : "") + t
+              })
+            } else if (!curVol.realpath) {
+              curVol.realpath = unexpandPlaceholders(trimmed)
+            }
+          }
+        }
+
+        newGlobal.extra = extraGlobalLines.join("\n")
+        return { users: newUsers, groups: newGroups, volumes: newVolumes, global: newGlobal }
+      }
+
+      // ---------- JSON EXPORT / IMPORT ----------
+      function exportJSON() {
+        const data = {
+          schema: "copyparty-config-builder/1",
+          global: state.global,
+          users: state.users.map((u) => ({ username: u.username, password: u.password })),
+          groups: state.groups.map((g) => ({ name: g.name, members: g.members })),
+          volumes: state.volumes.map((v) => ({
+            vpath: v.vpath,
+            realpath: v.realpath,
+            rules: v.rules.map((r) => ({ subject: r.subject, letters: r.letters })),
+            flags: v.flags,
+            extraFlags: v.extraFlags,
+          })),
+        }
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })
+        const a = document.createElement("a")
+        a.href = URL.createObjectURL(blob)
+        a.download = "copyparty-config.json"
+        a.click()
+      }
+
+      function normalizeGlobal(g) {
+        const base = {
+          name: "",
+          port: "3923",
+          flags: { e2dsa: true, e2ts: false, z: false, qr: false, usernames: false },
+          extra: "",
+          ftp: { enabled: false, port: "3921" },
+          ftps: { enabled: false, port: "3990" },
+          sftp: { enabled: false, port: "3922", pw: false },
+          smb: { enabled: false, port: "445", write: false },
+          webdav: { disabled: false, authRequired: false },
+          shares: { enabled: false, path: "/s", adminOnly: false, admins: [], search: "" },
+        }
+        if (!g || typeof g !== "object") return base
+        return {
+          name: String(g.name ?? base.name),
+          port: String(g.port ?? base.port),
+          flags: Object.assign({}, base.flags, g.flags || {}),
+          extra: String(g.extra ?? base.extra),
+          ftp: Object.assign({}, base.ftp, g.ftp || {}),
+          ftps: Object.assign({}, base.ftps, g.ftps || {}),
+          sftp: Object.assign({}, base.sftp, g.sftp || {}),
+          smb: Object.assign({}, base.smb, g.smb || {}),
+          webdav: Object.assign({}, base.webdav, g.webdav || {}),
+          shares: Object.assign({}, base.shares, g.shares || {}, {
+            admins: Array.isArray(g.shares && g.shares.admins)
+              ? g.shares.admins.map(String).filter(Boolean)
+              : typeof (g.shares && g.shares.admins) === "string"
+                ? g.shares.admins
+                    .split(",")
+                    .map((s) => s.trim())
+                    .filter(Boolean)
+                : [],
+          }),
+        }
+      }
+
+      function handleImportJSON(input) {
+        const file = input.files && input.files[0]
+        if (!file) return
+        const reader = new FileReader()
+        reader.onload = () => {
+          try {
+            const data = JSON.parse(String(reader.result))
+            if (!data || typeof data !== "object") throw new Error("root is not an object")
+
+            const users = Array.isArray(data.users)
+              ? data.users
+                  .map((u) => ({
+                    id: uid(),
+                    username: String(u.username ?? ""),
+                    password: String(u.password ?? ""),
+                  }))
+                  .filter((u) => u.username)
+              : []
+
+            const groups = Array.isArray(data.groups)
+              ? data.groups
+                  .map((g) => ({
+                    id: uid(),
+                    name: String(g.name ?? ""),
+                    members: Array.isArray(g.members) ? g.members.map(String) : [],
+                    search: "",
+                  }))
+                  .filter((g) => g.name)
+              : []
+
+            const volumes = Array.isArray(data.volumes)
+              ? data.volumes.map((v) => ({
+                  id: uid(),
+                  vpath: String(v.vpath ?? ""),
+                  realpath: String(v.realpath ?? ""),
+                  rules: Array.isArray(v.rules)
+                    ? v.rules.map((r) => ({
+                        id: uid(),
+                        subject: String(r.subject ?? "*"),
+                        letters: String(r.letters ?? "r"),
+                      }))
+                    : [],
+                  flags: Object.assign({ e2d: false, e2ds: false, e2dsa: false, e2t: false, e2ts: false, dedup: false }, v.flags || {}),
+                  extraFlags: String(v.extraFlags ?? ""),
+                }))
+              : []
+
+            state.global = normalizeGlobal(data.global)
+            state.users = users
+            state.groups = groups
+            state.volumes = volumes
+            renderAll()
+          } catch (e) {
+            alert("Could not parse that JSON file: " + e.message)
+          }
+        }
+        reader.onerror = () => alert("Could not read that file.")
+        reader.readAsText(file)
+        input.value = ""
+      }
+
+      function handleLoadConfig(input) {
+        const file = input.files && input.files[0]
+        if (!file) return
+        const reader = new FileReader()
+        reader.onload = () => {
+          try {
+            const parsed = parseConfig(String(reader.result))
+            state.users = parsed.users
+            state.groups = parsed.groups
+            state.volumes = parsed.volumes
+            state.global = parsed.global
+            renderAll()
+          } catch (e) {
+            alert("Could not parse that config file: " + e.message)
+          }
+        }
+        reader.onerror = () => alert("Could not read that file.")
+        reader.readAsText(file)
+        input.value = ""
+      }
+
+      // ---------- RENDER / OUTPUT ----------
+      function renderAll() {
+        renderGlobal()
+        renderUsers()
+        renderGroups()
+        renderVolumes()
+        document.getElementById("out").textContent = buildConfig()
+      }
+
+      function copyOut() {
+        navigator.clipboard.writeText(document.getElementById("out").textContent).then(() => {
+          const b = event.target
+          const old = b.textContent
+          b.textContent = "Copied!"
+          setTimeout(() => (b.textContent = old), 1200)
+        })
+      }
+      function downloadOut() {
+        const blob = new Blob([document.getElementById("out").textContent], { type: "text/plain" })
+        const a = document.createElement("a")
+        a.href = URL.createObjectURL(blob)
+        a.download = "copyparty.conf"
+        a.click()
+      }
+
+      // seed with example data so the output isn't empty on first load
+      state.users.push({ id: uid(), username: "User1", password: "Password1" })
+      state.global.flags.usernames = true
+      state.groups.push({ id: uid(), name: "Pleb", members: ["User1"], search: "" })
+      state.volumes.push({
+        id: uid(),
+        vpath: "/",
+        realpath: "/srv/shared",
+        rules: [
+          { id: uid(), subject: "@Pleb", letters: "A" },
+          { id: uid(), subject: "*", letters: "r" },
+        ],
+        flags: { e2d: false, e2ds: false, e2dsa: true, e2t: false, e2ts: false, dedup: false },
+        extraFlags: "",
+      })
+      state.volumes.push({
+        id: uid(),
+        vpath: "/users/{username}",
+        realpath: "/srv/home/{username}",
+        rules: [{ id: uid(), subject: "{username}", letters: "A" }],
+        flags: { e2d: true, e2ds: false, e2dsa: false, e2t: false, e2ts: false, dedup: true },
+        extraFlags: "",
+      })
+
+      renderAll()
+    </script>
+  </body>
+</html>
