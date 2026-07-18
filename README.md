@@ -1,9 +1,6 @@
 <div align="center">
-  <img src="icons/conforge.svg" width="64" height="64" alt="conforge" />
+  <img src="icons/conforge.svg" width="512" height="200" alt="conforge" />
 </div>
-<h1 align="center">
-CONFORGE
-</h1>
 Generate config files and whatnot with a WebUI.
 
 Built quickly with AI but honestly, its just to make my life easy.
