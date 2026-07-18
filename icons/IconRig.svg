@@ -26,9 +26,9 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="px"
-     inkscape:zoom="1.1064453"
-     inkscape:cx="240.40953"
-     inkscape:cy="207.42101"
+     inkscape:zoom="0.55322265"
+     inkscape:cx="215.10327"
+     inkscape:cy="22.594881"
      inkscape:window-width="2560"
      inkscape:window-height="1351"
      inkscape:window-x="2551"
@@ -40,8 +40,8 @@
     <rect
        x="54.227715"
        y="139.18447"
-       width="494.376"
-       height="403.99648"
+       width="732.97794"
+       height="548.60372"
        id="rect10" />
     <rect
        x="87.668139"
@@ -119,10 +119,10 @@
     <text
        xml:space="preserve"
        id="text2"
-       style="font-size:366.667px;line-height:0.6;font-family:'Fast Hand';-inkscape-font-specification:'Fast Hand, Normal';text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;direction:ltr;white-space:pre;shape-inside:url(#rect10);display:inline;fill:#ffffff;stroke-width:0"
-       transform="translate(-48.549157,21.382351)"><tspan
-         x="131.33123"
-         y="350.99145"
-         id="tspan1">ir</tspan></text>
+       style="font-size:400px;line-height:0.6;font-family:'Fast Hand';-inkscape-font-specification:'Fast Hand, Normal';text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;direction:ltr;white-space:pre;shape-inside:url(#rect10);display:inline;fill:#ffffff;stroke-width:0"
+       transform="translate(-168.13477,12.70662)"><tspan
+         x="235.16992"
+         y="370.24651"
+         id="tspan2">ir</tspan></text>
   </g>
 </svg>
