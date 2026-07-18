@@ -749,7 +749,7 @@
       </div>
     </div>
     <label class="small" style="margin-top:14px;">Extra global lines (one per line)</label>
-    <textarea rows="7" placeholder="e.g. rproxy: 1&#10;chpw" onchange="updateGlobalField('extra',this.value)">${esc(g.extra)}</textarea>
+    <textarea rows="${esc(g.extra).split("\n").length}" placeholder="e.g. rproxy: 1&#10;chpw" onchange="updateGlobalField('extra',this.value)">${esc(g.extra)}</textarea>
   `
         filterChipContainer("chips-shareadmins", g.shares.search || "")
       }
