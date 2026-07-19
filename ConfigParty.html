@@ -84,13 +84,14 @@
         padding: 24px 24px;
         position: sticky;
         top: 0;
-        height: 100vh;
+        max-height: 100vh;
         overflow-y: auto;
       }
       @media (max-width: 980px) {
         .output {
           position: static;
-          height: auto;
+          max-height: none;
+          overflow-y: visible;
           border-left: none;
           border-top: 1px solid var(--line);
         }
@@ -1606,7 +1607,6 @@
         a.click()
       }
 
-      // seed with example data so the output isn't empty on first load
       state.users.push({ id: uid(), username: "User1", password: "Password1" })
       state.global.flags.usernames = true
       state.groups.push({ id: uid(), name: "Pleb", members: ["User1"], search: "" })
