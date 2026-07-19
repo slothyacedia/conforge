@@ -533,8 +533,8 @@
   <body>
     <header>
       <div class="titles">
-        <h1>&gt;_ configparty</h1>
-        <span class="tag"><code>copyparty config tool</code></span>
+        <h1>&gt;_ ConfigParty</h1>
+        <span class="tag"><code>Copyparty Config Tool</code></span>
       </div>
       <div class="hdr-actions">
         <input type="file" id="load-file" accept=".conf,.txt" style="display: none" onchange="handleLoadConfig(this)" />
@@ -763,7 +763,7 @@
                  <select id="shareadmin-group-pick" ${g.shares.enabled ? "" : "disabled"} style="max-width:180px;">
                    ${state.groups.map((gr) => `<option value="${escAttr(gr.name)}">@${esc(gr.name)}</option>`).join("")}
                  </select>
-                 <button class="tiny" ${g.shares.enabled ? "" : "disabled"} onclick="addGroupToShareAdmins(document.getElementById('shareadmin-group-pick').value)">+ add all members</button>
+                 <button class="tiny" ${g.shares.enabled ? "" : "disabled"} onclick="addGroupToShareAdmins(document.getElementById('shareadmin-group-pick').value)">+ Add all members</button>
                </div>
                `
                    : ""
